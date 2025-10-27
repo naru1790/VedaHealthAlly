@@ -167,9 +167,10 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-              // Animated Logo Circle
+                SizedBox(height: size.height * 0.15),
+                // Animated Logo Circle
               FadeInDown(
                 delay: const Duration(milliseconds: 200),
                 child: AnimatedBuilder(
