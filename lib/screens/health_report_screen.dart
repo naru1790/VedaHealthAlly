@@ -295,36 +295,54 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0E1A) : const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(
-          report.reportTitle,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-          ),
-        ),
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         elevation: 0,
-        backgroundColor: isDark ? const Color(0xFF0A0E1A) : Colors.white,
-        iconTheme: IconThemeData(
-          color: AppColors.primaryLight,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.primaryLight,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Insights',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+              ),
+            ),
+            Text(
+              'Your 30-Day Recovery Plan',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryLight,
+              ),
+            ),
+          ],
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildKeyMetricsSection(isDark),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildAtAGlanceSection(isDark),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildRiskAnalysisSection(isDark),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildActionPlanSection(isDark),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildSupplementSection(isDark),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildMotivationalSection(isDark),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -336,29 +354,16 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Key Health Metrics',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
+        Text(
+          'Key Health Metrics',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -381,7 +386,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     );
   }
 
-  // METRIC CARD - Professional design with proper spacing
+  // METRIC CARD - Modern design matching app theme
   Widget _buildMetricCard(KeyMetric metric, bool isDark) {
     final color = _getStatusColor(metric.status);
     final percentage = _calculatePercentage(metric);
@@ -392,7 +397,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
         color: isDark
             ? const Color(0xFF1E1E1E)
             : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark 
               ? color.withOpacity(0.3) 
@@ -402,104 +407,137 @@ class _HealthReportScreenState extends State<HealthReportScreen>
         boxShadow: [
           BoxShadow(
             color: isDark 
-                ? Colors.black.withOpacity(0.3)
-                : const Color(0xFF000000).withOpacity(0.04),
-            blurRadius: 12,
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.04),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Metric label at top
-          Text(
-            metric.label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isDark ? const Color(0xFFB0B0B0) : const Color(0xFF64748B),
-              letterSpacing: 0.2,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          
-          // Circular progress indicator
-          SizedBox(
-            width: 75,
-            height: 75,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 75,
-                  height: 75,
-                  child: CircularProgressIndicator(
-                    value: percentage / 100,
-                    strokeWidth: 7,
-                    backgroundColor: isDark 
-                        ? const Color(0xFF2A2A2A) 
-                        : const Color(0xFFF1F5F9),
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
+          // Metric label and status badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  metric.label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    letterSpacing: -0.2,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      metric.value % 1 == 0 
-                          ? '${metric.value.toInt()}'
-                          : '${metric.value.toStringAsFixed(1)}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      metric.unit,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? const Color(0xFF808080) : const Color(0xFF94A3B8),
-                      ),
+              ),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 4,
+                      spreadRadius: 1,
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           
-          // Normal range badge at bottom
+          // Value display with linear progress
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    metric.value % 1 == 0 
+                        ? '${metric.value.toInt()}'
+                        : '${metric.value.toStringAsFixed(1)}',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    metric.unit,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? const Color(0xFF808080) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Linear progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: percentage / 100,
+                  minHeight: 6,
+                  backgroundColor: isDark 
+                      ? const Color(0xFF2A2A2A) 
+                      : const Color(0xFFF1F5F9),
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Normal range badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: color.withOpacity(0.2),
+                color: color.withOpacity(0.3),
                 width: 1,
               ),
             ),
-            child: Text(
-              'Normal: ${metric.normalRange}',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: color,
-                letterSpacing: 0.1,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.straighten_rounded,
+                  size: 12,
+                  color: color,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    'Normal: ${metric.normalRange}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      letterSpacing: 0.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -512,29 +550,14 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                report.atAGlanceSummary.title,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          report.atAGlanceSummary.title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 16),
         ...report.atAGlanceSummary.negatives.map((item) {
@@ -657,29 +680,14 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                report.riskAnalysis.title,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          report.riskAnalysis.title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -966,29 +974,14 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                report.actionPlan.title,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          report.actionPlan.title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -1153,29 +1146,14 @@ class _HealthReportScreenState extends State<HealthReportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                report.supplementPrescription.title,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          report.supplementPrescription.title,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            letterSpacing: -0.5,
+          ),
         ),
         const SizedBox(height: 8),
         Text(

@@ -1358,45 +1358,76 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: _buildAppBar(),
+      backgroundColor: isDark ? const Color(0xFF0A0E1A) : const Color(0xFFF5F7FA),
       body: _buildBody(),
     );
   }
 
   AppBar _buildAppBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final showProgress = _progressState.currentPhase != WorkoutPhase.summary &&
         _progressState.currentPhase != WorkoutPhase.finished;
     
     return AppBar(
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      elevation: 0,
       leading: showProgress
           ? IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: AppColors.primaryLight,
+              ),
               onPressed: _goToPreviousStep,
             )
           : IconButton(
-              icon: const Icon(Icons.home),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: AppColors.primaryLight,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_getAppBarTitle()),
+          Text(
+            _getAppBarTitle(),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
           Row(
             children: [
               Text(
                 _getCurrentDayName(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryLight,
+                ),
               ),
               if (showProgress && _totalEstimatedSeconds > 0) ...[
-                const Text(
+                Text(
                   ' • ',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                  ),
                 ),
                 Text(
-                  '${_formatTime(_totalEstimatedSeconds - _calculateCompletedTime())} remaining',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                  '${_formatTime(_totalEstimatedSeconds - _calculateCompletedTime())} left',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.secondaryLight,
+                  ),
                 ),
               ],
             ],
@@ -1406,7 +1437,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       actions: [
         if (showProgress)
           IconButton(
-            icon: const Icon(Icons.home),
+            icon: Icon(Icons.home_rounded, color: AppColors.primaryLight),
             tooltip: 'Home',
             onPressed: () {
               _showExitConfirmDialog(context, isHomeButton: true);
@@ -1414,22 +1445,22 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
           ),
         if (showProgress)
           IconButton(
-            icon: const Icon(Icons.exit_to_app),
+            icon: Icon(Icons.close_rounded, color: AppColors.secondaryLight),
             tooltip: 'Exit Workout',
             onPressed: () {
               _showExitConfirmDialog(context, isHomeButton: false);
             },
           ),
       ],
-      backgroundColor: AppColors.primaryLight,
-      foregroundColor: Colors.white,
       bottom: showProgress && _totalEstimatedSeconds > 0
           ? PreferredSize(
               preferredSize: const Size.fromHeight(4.0),
               child: LinearProgressIndicator(
                 value: _calculateProgress(),
-                backgroundColor: Colors.white30,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                backgroundColor: isDark 
+                    ? const Color(0xFF2A2A2A)
+                    : const Color(0xFFE8ECF1),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLight),
               ),
             )
           : null,
@@ -1536,147 +1567,228 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   }
 
   Widget _buildSummaryScreen() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final totalTime = _formatTime(_totalEstimatedSeconds);
     
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _currentSession!.title,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryLight,
-                ),
-          ),
-          const SizedBox(height: 8),
+          // Title and Time Card
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.secondaryLight.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primaryLight.withOpacity(0.1),
+                  AppColors.secondaryLight.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.secondaryLight.withOpacity(0.3),
+                color: AppColors.primaryLight.withOpacity(0.3),
+                width: 1.5,
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.access_time, color: AppColors.secondaryLight, size: 20),
-                const SizedBox(width: 8),
                 Text(
-                  'Total Time: $totalTime',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  _currentSession!.title,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryLight.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.secondaryLight.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.timer_rounded,
                         color: AppColors.secondaryLight,
+                        size: 20,
                       ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Total Time: $totalTime',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.secondaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'Workout Components:',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            'Workout Components',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _currentSession!.components.length,
-              itemBuilder: (context, index) {
-                final component = _currentSession!.components[index];
-                final block = _program!.workoutLibrary[component.blockId];
-                if (block == null) return const SizedBox.shrink();
-                
-                final componentTime = _formatTime(_calculateComponentTime(component));
-                final exerciseCount = block.exercises.length;
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _currentSession!.components.length,
+            itemBuilder: (context, index) {
+              final component = _currentSession!.components[index];
+              final block = _program!.workoutLibrary[component.blockId];
+              if (block == null) return const SizedBox.shrink();
+              
+              final componentTime = _formatTime(_calculateComponentTime(component));
+              final exerciseCount = block.exercises.length;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.primaryLight.withOpacity(0.3)
+                        : const Color(0xFFE8ECF1),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
                   ),
                   child: ExpansionTile(
-                    shape: const Border(),
-                    collapsedShape: const Border(),
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     leading: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.primaryLight.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primaryLight.withOpacity(0.3),
+                          width: 1,
+                        ),
                       ),
                       child: Icon(
-                        Icons.fitness_center,
+                        Icons.fitness_center_rounded,
                         color: AppColors.primaryLight,
+                        size: 20,
                       ),
                     ),
                     title: Text(
                       block.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
                         fontSize: 16,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
-                    subtitle: Text(
-                      '$exerciseCount exercise${exerciseCount != 1 ? 's' : ''} • $componentTime',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '$exerciseCount exercise${exerciseCount != 1 ? 's' : ''} • $componentTime',
+                        style: TextStyle(
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ...block.exercises.map((exercise) {
-                              final progression = _getProgressionForExercise(exercise);
-                              final sets = progression?.sets ?? 1;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 4,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.secondaryLight,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        exercise.name,
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    Text(
-                                      '$sets set${sets != 1 ? 's' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ],
-                        ),
+                      Divider(
+                        thickness: 1,
+                        color: isDark
+                            ? const Color(0xFF2A2A2A)
+                            : const Color(0xFFE8ECF1),
                       ),
+                      const SizedBox(height: 8),
+                      ...block.exercises.map((exercise) {
+                        final progression = _getProgressionForExercise(exercise);
+                        final sets = progression?.sets ?? 1;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondaryLight,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  exercise.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondaryLight.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: AppColors.secondaryLight.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  '$sets set${sets != 1 ? 's' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.secondaryLight,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      const SizedBox(height: 8),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -1686,13 +1798,25 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
                 backgroundColor: AppColors.secondaryLight,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                elevation: 4,
+                elevation: 0,
+                shadowColor: AppColors.secondaryLight.withOpacity(0.3),
               ),
-              child: const Text(
-                'START WORKOUT',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.play_arrow_rounded, size: 24),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'START WORKOUT',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

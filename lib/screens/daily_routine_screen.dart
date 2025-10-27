@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_routine_models.dart';
 import '../services/notification_service.dart';
 import '../core/theme/app_colors.dart';
@@ -293,24 +294,8 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         }
       }
       
-      await _scheduleAllNotifications();
-      
-      // Show confirmation to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Daily notifications scheduled successfully!'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+      // Check if notifications have already been scheduled today
+      await _scheduleNotificationsIfNeeded();
       
       setState(() {
         isLoading = false;
@@ -398,6 +383,36 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       duration: const Duration(milliseconds: 800),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _scheduleNotificationsIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+    final lastScheduledDate = prefs.getString('last_notification_schedule_date');
+    
+    // Only schedule if we haven't scheduled today yet
+    if (lastScheduledDate != todayString) {
+      await _scheduleAllNotifications();
+      await prefs.setString('last_notification_schedule_date', todayString);
+      
+      // Show confirmation to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Daily notifications scheduled for today!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _scheduleAllNotifications() async {

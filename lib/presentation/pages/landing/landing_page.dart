@@ -71,12 +71,12 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
               // Hero Section - Modern & Bold
               _buildHeroSection(size, isDark),
               
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
               
               // Feature Cards - Card Style
               _buildFeatureCards(isDark),
               
-              const SizedBox(height: 60),
+              const SizedBox(height: 50),
               
               // Stats Section
               _buildStatsSection(isDark),
@@ -167,9 +167,8 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: size.height * 0.15),
                 // Animated Logo Circle
               FadeInDown(
                 delay: const Duration(milliseconds: 200),
