@@ -255,11 +255,18 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
   bool isLoading = true;
   final NotificationService _notificationService = NotificationService();
   List<TimelineEvent> todayEvents = [];
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -290,12 +297,86 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       setState(() {
         isLoading = false;
       });
+      
+      // Scroll to current/next event after a short delay to ensure list is rendered
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToCurrentEvent();
+      });
     } catch (e) {
       debugPrint('Error loading daily routine data: $e');
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  int _findCurrentOrNextEventIndex() {
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    
+    for (int i = 0; i < todayEvents.length; i++) {
+      final event = todayEvents[i];
+      final timeParts = event.startTime.split(':');
+      final eventMinutes = int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]);
+      
+      // If event is in the future, return it
+      if (eventMinutes > currentMinutes) {
+        return i;
+      }
+      
+      // If event has an end time, check if we're currently in it
+      if (event.endTime != null) {
+        final endTimeParts = event.endTime!.split(':');
+        final endMinutes = int.parse(endTimeParts[0]) * 60 + int.parse(endTimeParts[1]);
+        if (currentMinutes >= eventMinutes && currentMinutes <= endMinutes) {
+          return i;
+        }
+      }
+    }
+    
+    // If all events are in the past, return the last one
+    return todayEvents.length - 1;
+  }
+
+  bool _isEventCurrent(TimelineEvent event) {
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    
+    final timeParts = event.startTime.split(':');
+    final eventMinutes = int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]);
+    
+    // Check if we're within 15 minutes before or after the event start time
+    if ((currentMinutes >= eventMinutes - 15) && (currentMinutes <= eventMinutes + 15)) {
+      return true;
+    }
+    
+    // If event has an end time, check if we're currently in it
+    if (event.endTime != null) {
+      final endTimeParts = event.endTime!.split(':');
+      final endMinutes = int.parse(endTimeParts[0]) * 60 + int.parse(endTimeParts[1]);
+      if (currentMinutes >= eventMinutes && currentMinutes <= endMinutes) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  void _scrollToCurrentEvent() {
+    if (todayEvents.isEmpty || !_scrollController.hasClients) return;
+    
+    final currentIndex = _findCurrentOrNextEventIndex();
+    
+    // Each item height is approximately 150 pixels (card + timeline)
+    final double itemHeight = 150.0;
+    final double targetPosition = currentIndex * itemHeight;
+    
+    // Scroll with animation
+    _scrollController.animateTo(
+      targetPosition,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+    );
   }
 
   Future<void> _scheduleAllNotifications() async {
@@ -886,11 +967,13 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         ],
       ),
       body: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         itemCount: todayEvents.length,
         itemBuilder: (context, index) {
           final event = todayEvents[index];
           final isLast = index == todayEvents.length - 1;
+          final isCurrent = _isEventCurrent(event);
 
           return FadeInUp(
             duration: Duration(milliseconds: 400 + (index * 50)),
@@ -909,10 +992,14 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                         decoration: BoxDecoration(
                           color: _getEventColor(event.eventType),
                           shape: BoxShape.circle,
+                          border: isCurrent ? Border.all(
+                            color: AppColors.primaryLight,
+                            width: 3,
+                          ) : null,
                           boxShadow: [
                             BoxShadow(
-                              color: _getEventColor(event.eventType).withOpacity(0.3),
-                              blurRadius: 8,
+                              color: _getEventColor(event.eventType).withOpacity(isCurrent ? 0.5 : 0.3),
+                              blurRadius: isCurrent ? 12 : 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
@@ -949,18 +1036,24 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                       margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        color: isCurrent 
+                            ? AppColors.primaryLight.withOpacity(0.05)
+                            : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isDark 
-                              ? _getEventColor(event.eventType).withOpacity(0.3)
-                              : const Color(0xFFE8ECF1),
-                          width: 1,
+                          color: isCurrent 
+                              ? AppColors.primaryLight.withOpacity(0.5)
+                              : (isDark 
+                                  ? _getEventColor(event.eventType).withOpacity(0.3)
+                                  : const Color(0xFFE8ECF1)),
+                          width: isCurrent ? 2 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 8,
+                            color: isCurrent 
+                                ? AppColors.primaryLight.withOpacity(0.15)
+                                : Colors.black.withOpacity(0.04),
+                            blurRadius: isCurrent ? 12 : 8,
                             offset: const Offset(0, 2),
                           ),
                         ],
@@ -992,6 +1085,42 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                                   ),
                                 ),
                               ),
+                              if (isCurrent) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Text(
+                                        'NOW',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               const Spacer(),
                               Icon(
                                 Icons.arrow_forward_ios_rounded,
