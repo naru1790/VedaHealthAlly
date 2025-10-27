@@ -11,45 +11,56 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    // Initialize timezone data
-    tz.initializeTimeZones();
+    try {
+      // Initialize timezone data
+      tz.initializeTimeZones();
+      
+      // Set local timezone
+      final String timeZoneName = 'Asia/Kolkata'; // Change if needed
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
 
-    // Android initialization
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      // Android initialization
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+      // iOS initialization
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    await _notifications.initialize(initSettings);
+      await _notifications.initialize(initSettings);
 
-    // Request permissions for iOS
-    await _notifications
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+      // Request permissions for iOS
+      await _notifications
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
 
-    // Request permissions for Android 13+
-    final androidImpl = _notifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    
-    await androidImpl?.requestNotificationsPermission();
-    
-    // Request exact alarm permission for Android 14+ (API 34+)
-    await androidImpl?.requestExactAlarmsPermission();
+      // Request permissions for Android 13+
+      final androidImpl = _notifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      
+      final permissionGranted = await androidImpl?.requestNotificationsPermission();
+      print('Notification permission granted: $permissionGranted');
+      
+      // Request exact alarm permission for Android 14+ (API 34+)
+      final exactAlarmGranted = await androidImpl?.requestExactAlarmsPermission();
+      print('Exact alarm permission granted: $exactAlarmGranted');
+    } catch (e) {
+      print('Error initializing notifications: $e');
+      rethrow;
+    }
   }
 
   Future<void> scheduleDailyNotification({
@@ -60,40 +71,50 @@ class NotificationService {
     required int minute,
     bool isAlarm = false,
   }) async {
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      _nextInstanceOfTime(hour, minute),
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          isAlarm ? 'wake_alarm_channel' : 'daily_routine_channel',
-          isAlarm ? 'Wake Up Alarms' : 'Daily Routine Notifications',
-          channelDescription: isAlarm 
-              ? 'Wake up alarm with gentle sound' 
-              : 'Notifications for daily routine events',
-          importance: Importance.max,
-          priority: Priority.max,
-          playSound: true,
-          sound: isAlarm 
-              ? const RawResourceAndroidNotificationSound('gentle_alarm')
-              : null,
-          enableVibration: true,
-          fullScreenIntent: isAlarm,
-          category: isAlarm ? AndroidNotificationCategory.alarm : null,
+    try {
+      final scheduledTime = _nextInstanceOfTime(hour, minute);
+      print('Scheduling ${isAlarm ? "ALARM" : "notification"} ID:$id "$title" at ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} -> $scheduledTime');
+      
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledTime,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            isAlarm ? 'wake_alarm_channel' : 'daily_routine_channel',
+            isAlarm ? 'Wake Up Alarms' : 'Daily Routine Notifications',
+            channelDescription: isAlarm 
+                ? 'Wake up alarm with morning alarm sound' 
+                : 'Notifications for daily routine events',
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+            sound: isAlarm 
+                ? const RawResourceAndroidNotificationSound('morning_alarm')
+                : null,
+            enableVibration: true,
+            fullScreenIntent: isAlarm,
+            category: isAlarm ? AndroidNotificationCategory.alarm : null,
+          ),
+          iOS: DarwinNotificationDetails(
+            sound: isAlarm ? 'morning_alarm.aiff' : null,
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          sound: isAlarm ? 'gentle_alarm.aiff' : null,
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      
+      print('Successfully scheduled ${isAlarm ? "ALARM" : "notification"} ID:$id');
+    } catch (e) {
+      print('ERROR scheduling ${isAlarm ? "ALARM" : "notification"} ID:$id: $e');
+      rethrow;
+    }
   }
 
   Future<void> scheduleWakeUpAlarm({
