@@ -1,0 +1,913 @@
+{
+  "programId": "wp_phase1_foundation_001",
+  "programTitle": "Phase 1: Foundation & Habit Building (Core Focus)",
+  "programGoal": "Build a sustainable 7-day activity habit, improve cardiovascular stamina (jog/walk), and build foundational core and back strength.",
+  "programNotes": "Final 'Gold Standard' Plan. This version is now personalized with a safer, more gradual equipment progression based on your 2.5kg/5kg history. Focus on perfect form.",
+  "programDurationWeeks": 12,
+  "weeklySchedule": [
+    {
+      "dayOfWeek": "Monday",
+      "sessions": [
+        {
+          "sessionId": "sess_mon_morning",
+          "title": "Full Body Strength A + Core A (Foundation)",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Your first strength day. Focus on form with the 2.5kg and 5kg weights.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpStrength",
+              "rounds": 1
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "fullBodyStrengthA",
+              "rounds": 3,
+              "notes": "Perform 3 rounds of Full Body Strength A"
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coreA",
+              "rounds": 3,
+              "notes": "Perform 3 rounds of the extended Core A block"
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Tuesday",
+      "sessions": [
+        {
+          "sessionId": "sess_tue_morning",
+          "title": "Stamina Cardio Progression",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Go to your 400m track. This replaces your normal walk.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpCardio",
+              "rounds": 1
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "cardioProgression",
+              "rounds": 1,
+              "notes": "Follow the 'Cardio Progression' block for the current week."
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Wednesday",
+      "sessions": [
+        {
+          "sessionId": "sess_wed_morning",
+          "title": "Full Body Strength B + Core B (Foundation)",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Your second strength day. This uses your 2.5kg dumbbells and resistance bands.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpStrength",
+              "rounds": 1
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "fullBodyStrengthB",
+              "rounds": 3,
+              "notes": "Perform 3 rounds of Full Body Strength B"
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coreB",
+              "rounds": 3,
+              "notes": "Perform 3 rounds of the extended Core B block"
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Thursday",
+      "sessions": [
+        {
+          "sessionId": "sess_thu_morning",
+          "title": "Stamina Cardio Progression",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Back to the track. Focus on controlling your breathing during the jogs.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpCardio",
+              "rounds": 1
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "cardioProgression",
+              "rounds": 1,
+              "notes": "Follow the 'Cardio Progression' block for the current week."
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Friday",
+      "sessions": [
+        {
+          "sessionId": "sess_fri_morning",
+          "title": "Full Body Strength (Alternating) + Core",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Third strength day. We alternate A/B to give your muscles variety.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpStrength",
+              "rounds": 1
+            },
+            {
+              "componentType": "LOGIC",
+              "logic": {
+                "type": "ALTERNATE_BY_WEEK",
+                "odd": {
+                  "note": "Perform 3 rounds of Full Body Strength A + 3 rounds of Core A",
+                  "blocks": [
+                    { "blockId": "fullBodyStrengthA", "rounds": 3 },
+                    { "blockId": "coreA", "rounds": 3 }
+                  ]
+                },
+                "even": {
+                  "note": "Perform 3 rounds of Full Body Strength B + 3 rounds of Core B",
+                  "blocks": [
+                    { "blockId": "fullBodyStrengthB", "rounds": 3 },
+                    { "blockId": "coreB", "rounds": 3 }
+                  ]
+                }
+              }
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Saturday",
+      "sessions": [
+        {
+          "sessionId": "sess_sat_morning",
+          "title": "Stamina Cardio Progression",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Last cardio progression for the week. You should start to feel slightly more confident.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "warmUpCardio",
+              "rounds": 1
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "cardioProgression",
+              "rounds": 1,
+              "notes": "Follow the 'Cardio Progression' block for the current week."
+            },
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "coolDownGeneral",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "dayOfWeek": "Sunday",
+      "sessions": [
+        {
+          "sessionId": "sess_sun_morning_recovery",
+          "title": "Active Recovery Brisk Walk",
+          "durationMinutes": 60,
+          "timeOfDay": "Morning",
+          "notes": "Active Recovery. Go back to your original 5km continuous brisk walk. No jogging. This helps clear soreness.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "recoveryWalk",
+              "rounds": 1
+            }
+          ]
+        },
+        {
+          "sessionId": "sess_sun_evening_stretch",
+          "title": "Deep Static Stretching",
+          "durationMinutes": 20,
+          "timeOfDay": "Evening",
+          "notes": "A great way to end the week. Hold each stretch, breathe deeply.",
+          "components": [
+            {
+              "componentType": "BLOCK_REFERENCE",
+              "blockId": "staticStretchRoutine",
+              "rounds": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "workoutLibrary": {
+    "warmUpStrength": {
+      "blockId": "warmUpStrength",
+      "title": "Strength Warm-Up",
+      "blockType": "WARM_UP",
+      "estimatedDurationMinutes": 10,
+      "exercises": [
+        {
+          "exerciseId": "ex_arm_circles",
+          "name": "Arm Circles",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s forward, 30s back"
+          }
+        },
+        {
+          "exerciseId": "ex_torso_twists",
+          "name": "Torso Twists",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 45
+          }
+        },
+        {
+          "exerciseId": "ex_high_knees_warmup",
+          "name": "High Knees (in place)",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60
+          }
+        },
+        {
+          "exerciseId": "ex_bw_squats_warmup",
+          "name": "Bodyweight Squats",
+          "execution": {
+            "type": "REPS",
+            "reps": 15
+          }
+        },
+        {
+          "exerciseId": "ex_walking_lunges_warmup",
+          "name": "Walking Lunges",
+          "execution": {
+            "type": "REPS",
+            "reps": 10,
+            "description": "per leg"
+          }
+        }
+      ]
+    },
+    "warmUpCardio": {
+      "blockId": "warmUpCardio",
+      "title": "Cardio Warm-Up",
+      "blockType": "WARM_UP",
+      "estimatedDurationMinutes": 10,
+      "exercises": [
+        {
+          "exerciseId": "ex_high_knees_warmup_2",
+          "name": "High Knees (in place)",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60
+          }
+        },
+        {
+          "exerciseId": "ex_butt_kicks_warmup",
+          "name": "Butt Kicks (in place)",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60
+          }
+        },
+        {
+          "exerciseId": "ex_leg_swings_warmup",
+          "name": "Leg Swings (Front/Back & Side/Side)",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_torso_twists_warmup_2",
+          "name": "Torso Twists",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 45
+          }
+        },
+        {
+          "exerciseId": "ex_bw_squats_warmup_2",
+          "name": "Bodyweight Squats",
+          "execution": {
+            "type": "REPS",
+            "reps": 15
+          }
+        }
+      ]
+    },
+    "coolDownGeneral": {
+      "blockId": "coolDownGeneral",
+      "title": "General Cool-Down",
+      "blockType": "COOL_DOWN",
+      "estimatedDurationMinutes": 10,
+      "notes": "Hold each stretch for 30-45 seconds. Breathe deeply.",
+      "exercises": [
+        {
+          "exerciseId": "ex_quad_stretch",
+          "name": "Standing Quad Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_hamstring_stretch",
+          "name": "Standing Hamstring Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_calf_stretch",
+          "name": "Calf Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_chest_stretch",
+          "name": "Doorway Chest Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 45
+          }
+        },
+        {
+          "exerciseId": "ex_tricep_lat_stretch",
+          "name": "Overhead Tricep/Lat Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60,
+            "description": "30s per arm"
+          }
+        },
+        {
+          "exerciseId": "ex_childs_pose_cooldown",
+          "name": "Child's Pose",
+          "execution": {
+            "type": "DURATION_RANGE",
+            "minSeconds": 60,
+            "maxSeconds": 90
+          }
+        }
+      ]
+    },
+    "recoveryWalk": {
+      "blockId": "recoveryWalk",
+      "title": "Active Recovery Brisk Walk",
+      "blockType": "CARDIO",
+      "estimatedDurationMinutes": 60,
+      "notes": "Go back to your original 5km continuous brisk walk. No jogging. This helps clear soreness.",
+      "exercises": [
+        {
+          "exerciseId": "ex_walk_warmup",
+          "name": "Warm-Up Walk",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 300,
+            "description": "Casual pace walk"
+          }
+        },
+        {
+          "exerciseId": "ex_brisk_walk_5km",
+          "name": "Brisk Walk",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 3000,
+            "description": "Continuous Brisk Walking (Your 5km route). Focus on consistency."
+          }
+        },
+        {
+          "exerciseId": "ex_walk_cooldown",
+          "name": "Cool-Down Walk",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 300,
+            "description": "Casual pace walk"
+          }
+        }
+      ]
+    },
+    "staticStretchRoutine": {
+      "blockId": "staticStretchRoutine",
+      "title": "Deep Static Stretching",
+      "blockType": "ACTIVITY_LIST",
+      "estimatedDurationMinutes": 20,
+      "notes": "Hold each stretch for 45-60 seconds. Do not bounce.",
+      "exercises": [
+        {
+          "exerciseId": "ex_hamstring_stretch_deep",
+          "name": "Hamstring Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 120,
+            "description": "60s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_quad_stretch_deep",
+          "name": "Quad Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 120,
+            "description": "60s per leg"
+          }
+        },
+        {
+          "exerciseId": "ex_figure_four_stretch",
+          "name": "Figure-Four Stretch (Glutes)",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 120,
+            "description": "60s per side"
+          }
+        },
+        {
+          "exerciseId": "ex_chest_stretch_deep",
+          "name": "Doorway Chest Stretch",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 60
+          }
+        },
+        {
+          "exerciseId": "ex_childs_pose_deep",
+          "name": "Child's Pose",
+          "execution": {
+            "type": "DURATION",
+            "durationSeconds": 180
+          }
+        }
+      ]
+    },
+    "cardioProgression": {
+      "blockId": "cardioProgression",
+      "title": "Cardio Progression (Jog/Walk Intervals)",
+      "blockType": "CARDIO_INTERVALS",
+      "notes": "Perform 3x/week (Tue, Thu, Sat). Use your 400m track.",
+      "progression": [
+        {
+          "weekRange": { "start": 1, "end": 4 },
+          "label": "Foundation",
+          "totalDurationMinutes": 40,
+          "routine": {
+            "intervals": [
+              {
+                "activity": "Gentle Jog",
+                "durationSeconds": 60
+              },
+              {
+                "activity": "Brisk Walk",
+                "durationSeconds": 240
+              }
+            ],
+            "repeat": 8,
+            "note": "Focus on consistency. The jog should be very light, barely faster than your walk."
+          }
+        },
+        {
+          "weekRange": { "start": 5, "end": 8 },
+          "label": "Build",
+          "totalDurationMinutes": 40,
+          "routine": {
+            "intervals": [
+              {
+                "activity": "Jog",
+                "durationSeconds": 180
+              },
+              {
+                "activity": "Brisk Walk",
+                "durationSeconds": 120
+              }
+            ],
+            "repeat": 8,
+            "note": "You are jogging more than walking now. Control your breathing."
+          }
+        },
+        {
+          "weekRange": { "start": 9, "end": 12 },
+          "label": "Stamina",
+          "totalDurationMinutes": 42,
+          "routine": {
+            "intervals": [
+              {
+                "activity": "Jog",
+                "durationSeconds": 360
+              },
+              {
+                "activity": "Brisk Walk",
+                "durationSeconds": 60
+              }
+            ],
+            "repeat": 6,
+            "note": "You are building real stamina here. The goal is continuous movement."
+          }
+        }
+      ]
+    },
+    "fullBodyStrengthA": {
+      "blockId": "fullBodyStrengthA",
+      "title": "Full Body Strength A",
+      "blockType": "STRENGTH",
+      "estimatedDurationMinutes": 25,
+      "exercises": [
+        {
+          "exerciseId": "ex_goblet_squat",
+          "name": "Dumbbell Goblet Squats",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12 },
+              "load": { "description": "Hold one 5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15 },
+              "load": { "description": "Hold one 5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12 },
+              "load": { "description": "Hold one 7.5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_pushups",
+          "name": "Push-ups (Progression)",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "AMRAP" },
+              "load": { "description": "Knee Push-ups (or Incline on a table)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "AMRAP" },
+              "load": { "description": "Start with 1-2 Full Push-ups, then Knee Push-ups" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "AMRAP" },
+              "load": { "description": "Aim for 3-5 Full Push-ups, then Knee Push-ups" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_one_arm_row",
+          "name": "Dumbbell 1-Arm Rows",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12, "description": "per side" },
+              "load": { "description": "5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15, "description": "per side" },
+              "load": { "description": "5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12, "description": "per side" },
+              "load": { "description": "7.5kg dumbbell" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            }
+          ]
+        }
+      ]
+    },
+    "fullBodyStrengthB": {
+      "blockId": "fullBodyStrengthB",
+      "title": "Full Body Strength B",
+      "blockType": "STRENGTH",
+      "estimatedDurationMinutes": 25,
+      "exercises": [
+        {
+          "exerciseId": "ex_db_lunges",
+          "name": "Dumbbell Lunges",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10, "description": "per leg" },
+              "load": { "description": "2.5kg dumbbells (one in each hand)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12, "description": "per leg" },
+              "load": { "description": "2.5kg dumbbells (one in each hand)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10, "description": "per leg" },
+              "load": { "description": "5kg dumbbells (one in each hand)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_db_overhead_press",
+          "name": "Dumbbell Overhead Press",
+          "notes": "Seated or Standing",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10 },
+              "load": { "description": "2.5kg dumbbells" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12 },
+              "load": { "description": "2.5kg dumbbells" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10 },
+              "load": { "description": "5kg dumbbells" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 },
+              "notes": "Only move up to 5kg when 2.5kg is very easy."
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_band_seated_rows",
+          "name": "Resistance Band Seated Rows",
+          "notes": "Use your 'Tube Band with Handles' set. Sit on floor, bands around feet.",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15 },
+              "load": { "description": "Light/Medium band (e.g., Red or Green)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 15, "maxReps": 20 },
+              "load": { "description": "Medium band (e.g., Green or Blue)" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15 },
+              "load": { "description": "Heavy band (e.g., Black) or two bands combined" },
+              "rest": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 }
+            }
+          ]
+        }
+      ]
+    },
+    "coreA": {
+      "blockId": "coreA",
+      "title": "Core A (Anterior Foundation)",
+      "blockType": "STRENGTH",
+      "estimatedDurationMinutes": 25,
+      "exercises": [
+        {
+          "exerciseId": "ex_plank",
+          "name": "Plank",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "DURATION_RANGE", "minSeconds": 30, "maxSeconds": 45 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "DURATION_RANGE", "minSeconds": 45, "maxSeconds": 60 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "DURATION_RANGE", "minSeconds": 60, "maxSeconds": 90 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_leg_raises",
+          "name": "Lying Leg Raises",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 15, "maxReps": 20 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 20, "maxReps": 25 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_hollow_body_crunches",
+          "name": "Hollow Body Crunches",
+          "notes": "Lie on back, press low back into floor. Lift shoulders and feet slightly. Crunch in.",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 15, "maxReps": 20 },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            }
+          ]
+        }
+      ]
+    },
+    "coreB": {
+      "blockId": "coreB",
+      "title": "Core B (Stability Foundation)",
+      "blockType": "STRENGTH",
+      "estimatedDurationMinutes": 25,
+      "exercises": [
+        {
+          "exerciseId": "ex_bird_dog",
+          "name": "Bird-Dog",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12, "description": "per side (2s hold)" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 12, "maxReps": 15, "description": "per side (2s hold)" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REPS", "reps": 15, "description": "per side (2s hold)" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_glute_bridges",
+          "name": "Glute Bridges",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REPS", "reps": 15 },
+              "load": { "description": "Hold one 5kg dumbbell on hips" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REPS", "reps": 20 },
+              "load": { "description": "Hold one 5kg dumbbell on hips" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REPS", "reps": 15 },
+              "load": { "description": "Hold one 7.5kg dumbbell on hips" },
+              "rest": { "type": "DURATION", "durationSeconds": 45 }
+            }
+          ]
+        },
+        {
+          "exerciseId": "ex_renegade_rows_mod",
+          "name": "Renegade Rows (Modified)",
+          "notes": "Start in a plank. Keep hips square. Go slow.",
+          "progression": [
+            {
+              "weekRange": { "start": 1, "end": 4 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 10, "maxReps": 12, "description": "per side" },
+              "load": { "description": "Bodyweight (just tap opposite shoulder)" },
+              "rest": { "type": "DURATION", "durationSeconds": 60 }
+            },
+            {
+              "weekRange": { "start": 5, "end": 8 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10, "description": "per side" },
+              "load": { "description": "2.5kg dumbbells" },
+              "rest": { "type": "DURATION", "durationSeconds": 60 }
+            },
+            {
+              "weekRange": { "start": 9, "end": 12 },
+              "sets": 3,
+              "execution": { "type": "REP_RANGE", "minReps": 8, "maxReps": 10, "description": "per side" },
+              "load": { "description": "5kg dumbbells" },
+              "rest": { "type": "DURATION", "durationSeconds": 60 }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

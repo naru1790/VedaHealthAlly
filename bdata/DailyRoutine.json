@@ -1,0 +1,302 @@
+{
+  "programId": "plan_phase1_gold_001",
+  "programTitle": "Phase 1 (Gold): Accelerated Recovery Nutrition Plan",
+  "programDurationDays": 28,
+  "programGoals": [
+    "Dramatically reduce Triglycerides ($240.4$) and LDL Cholesterol ($194.12$).",
+    "Allow liver to heal (reduce GGT $185.6$ and ALT $60.7$).",
+    "Reduce 41-inch waist size by targeting visceral (belly) fat.",
+    "Correct B12 ($106$) and Vit D ($10.7$) deficiencies.",
+    "Improve gut health and nutrient absorption."
+  ],
+  "corePrinciples": [
+    {
+      "title": "The 'Carb Curfew'",
+      "description": "This is our #1 Rule. NO rice, roti, or biryani after 7 PM. This will be the single biggest driver of lowering your triglycerides and reducing belly fat. Your dinner will be Protein + Vegetables."
+    },
+    {
+      "title": "Nutrient-Dense Breakfast",
+      "description": "Your new breakfast is your 'super-meal.' It will be packed with protein, healthy fats (nuts), and soluble fiber (oats, flax, fruit) to fight cholesterol and fuel you for the day."
+    },
+    {
+      "title": "Protein & Fiber Pacing",
+      "description": "Protein (Eggs, Paneer, Chicken, Dal, Curd) and Fiber (Psyllium, Flax, Oats, Chana, Veg, Fruit) at every meal. This keeps you full, stops cravings, and stabilizes blood sugar."
+    },
+    {
+      "title": "The 4-Week Liver Reset",
+      "description": "Your liver is under severe stress (GGT 185.6). For the next 4 weeks (Mon-Sun), a 100% 'No Alcohol' rule is required to allow your liver to heal. This is a non-negotiable medical priority."
+    }
+  ],
+  "dailySchedule": {
+    "scheduleTemplates": {
+      "default": {
+        "templateName": "Default Weekday",
+        "timelineEvents": [
+          {
+            "eventId": "evt_wake",
+            "startTime": "06:00",
+            "title": "Wake, Hydrate & Supplement",
+            "eventType": "HABIT",
+            "tasks": [
+              "Drink 500-750ml of water immediately.",
+              "Take your Vitamin B12 supplement (on an empty stomach)."
+            ]
+          },
+          {
+            "eventId": "evt_workout",
+            "startTime": "06:30",
+            "endTime": "07:30",
+            "title": "Daily Workout",
+            "eventType": "WORKOUT",
+            "description": "Perform your 60-minute workout session as scheduled in your workout plan.",
+            "workoutReferenceId": "phase1_daily_workout"
+          },
+          {
+            "eventId": "evt_breakfast",
+            "startTime": "07:45",
+            "title": "Breakfast: Your Super-Meal",
+            "eventType": "MEAL",
+            "description": "This is your most important meal for recovery and cholesterol. Choose one option.",
+            "mealReferenceId": "breakfastMealOptions"
+          },
+          {
+            "eventId": "evt_hydration_1",
+            "startTime": "10:30",
+            "title": "Hydration Check",
+            "eventType": "HYDRATION",
+            "tasks": [
+              "Drink 500ml water."
+            ]
+          },
+          {
+            "eventId": "evt_lunch",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "title": "Lunch",
+            "eventType": "MEAL",
+            "description": "This is your main carb meal. Follow the 'Lunch Formula'.",
+            "mealReferenceId": "lunchOptions"
+          },
+          {
+            "eventId": "evt_hydration_2",
+            "startTime": "16:00",
+            "title": "Hydration Check",
+            "eventType": "HYDRATION",
+            "tasks": [
+              "Drink 500ml water."
+            ]
+          },
+          {
+            "eventId": "evt_snack",
+            "startTime": "16:30",
+            "endTime": "17:00",
+            "title": "Crucial Snack",
+            "eventType": "MEAL",
+            "description": "This is the 'bridge' that stops you from being starving at dinner. It is mandatory. Choose one option.",
+            "mealReferenceId": "snackOptions"
+          },
+          {
+            "eventId": "evt_habit_swap",
+            "startTime": "18:00",
+            "title": "Habit Swap",
+            "eventType": "HABIT",
+            "description": "Swap your evening milk tea for Green Tea or a Black Coffee (no sugar). Milk/sugar will make you hungrier right before dinner."
+          },
+          {
+            "eventId": "evt_dinner",
+            "startTime": "20:00",
+            "endTime": "20:30",
+            "title": "Dinner (Carb Curfew) & Supplement",
+            "eventType": "MEAL",
+            "description": "This is your most important meal for fat loss. Follow the rule: NO RICE, NO ROTI. Your meal is 'Protein + Vegetables'.",
+            "tasks": [
+              "Take your Omega-3 (Fish Oil) capsule *with* this meal."
+            ],
+            "mealReferenceId": "dinnerOptions"
+          },
+          {
+            "eventId": "evt_wind_down",
+            "startTime": "22:00",
+            "title": "Wind-Down Routine",
+            "eventType": "HABIT",
+            "description": "This replaces your 10 PM rice. It helps you manage stress (smoking trigger) and helps your cholesterol.",
+            "tasks": [
+              "Take 1 tbsp Psyllium Husk (Ispaghol) in a full glass of water.",
+              "NO phone/TV for 15 minutes. Read a book, listen to music, or do light stretches. This will help you sleep."
+            ]
+          },
+          {
+            "eventId": "evt_sleep",
+            "startTime": "22:30",
+            "title": "Sleep",
+            "eventType": "SLEEP",
+            "tasks": [
+              "Lights out. Aim for 7-8 hours of quality sleep."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "weeklyOverrides": [
+    {
+      "dayOfWeek": "Sunday",
+      "eventIdToOverride": "evt_breakfast",
+      "newEvent": {
+        "eventId": "evt_breakfast_sun",
+        "startTime": "07:45",
+        "title": "Breakfast: Super-Meal & Vitamin D",
+        "eventType": "MEAL",
+        "description": "Today is your Vitamin D day. You MUST take it with your breakfast, as it needs fat (from nuts, eggs, etc.) for absorption.",
+        "tasks": [
+          "Take your Vitamin D 60,000 IU sachet WITH this meal."
+        ],
+        "mealReferenceId": "breakfastMealOptions"
+      }
+    }
+  ],
+  "whyThisPlanWorks": [
+    {
+      "title": "The 12-Hour Fasting Window",
+      "explanation": "By closing your kitchen at 8:30 PM and eating your first meal at 7:45 AM, you are creating a ~11-12 hour fasting window. This gives your digestive system and liver a rest and is excellent for burning fat."
+    },
+    {
+      "title": "Eat Healthy Fats to Beat Bad Fats",
+      "explanation": "The 'good fats' (MUFA/PUFA) in Almonds, Walnuts, Kaju, and Olive Oil actively help to lower your 'bad' LDL cholesterol and raise your 'good' HDL. We are adding these to your breakfast and snacks."
+    },
+    {
+      "title": "The 'Carb Curfew'",
+      "explanation": "Your late-night rice/biryani is converted directly into triglycerides, stressing your liver and storing as belly fat. Cutting carbs at night is the fastest way to reverse this."
+    },
+    {
+      "title": "Fiber-Loading (Soluble Fiber)",
+      "explanation": "Your psyllium husk, oats, flaxseed, apples, and anjeer are 'soluble fiber.' They act like a sponge, binding to cholesterol in your digestive system and removing it from your body. This is a direct intervention for your high LDL."
+    }
+  ],
+  "healthRiskManagement": {
+    "alcohol": {
+      "title": "The 4-Week Liver Reset (Non-Negotiable)",
+      "rule": "For Weeks 1-4, you must be 100% alcohol-free. Your GGT level (185.6) is a serious warning. You must give your liver a chance to heal. As you are 'open to quit drinking for a time,' this is that time.",
+      "futurePlan": "After 4 weeks, if your doctor clears it, we can move to a 'Harm Reduction Plan' (e.g., 2-drink max, 1-2 days/week, only whiskey + water, no sugary mixers)."
+    },
+    "smoking": {
+      "title": "The Quit Plan",
+      "rule": "Your new habits are your best tools. Use the nicotine gum to manage the chemical craving. Use your new routines to manage the *habitual* craving.",
+      "actionPlan": [
+        "**Craving Swap:** When you feel a craving, use a 'swap': Instead of a cigarette, drink a full glass of cold water and eat 10 Roasted Chanas. This gives your hands and mouth something to do.",
+        "**Goal Focus:** Your new 'Cardio Progression' (jogging) requires healthy lungs. This is the first time you are actively *using* your lungs. Connect the 'no smoking' goal to your 'jogging' goal. You can't improve one while hurting the other.",
+        "**Stress Management:** Your 10 PM 'Wind-Down Routine' is a non-negotiable stress reducer. Use it to replace any late-night smoke breaks."
+      ]
+    }
+  },
+  "mealLibrary": {
+    "breakfastMealOptions": {
+      "title": "Breakfast 'Super-Meal' Options (Choose 1)",
+      "proTips": [
+        "**Tea Rule:** You normally have a morning tea. Have it *after* this meal, not before. Starting your day with protein/fiber (not milk/sugar) will keep you full for hours.",
+        "**Workout Pairing:** Prioritize high-protein options (Eggs, Paneer) on your 3 Strength Days. Prioritize good-carb options (Oats) on your 3 Cardio Days."
+      ],
+      "options": [
+        {
+          "name": "Savory Protein Plate",
+          "description": "4 Boiled Egg Whites + 1 Whole Yolk. Side of 1 Apple. Plus a small handful (20g) of 'Mixed Nuts' (Almonds, Walnuts, Kaju).",
+          "tags": ["High Protein", "Low Carb"]
+        },
+        {
+          "name": "Cholesterol-Fighter Bowl (Oats)",
+          "description": "1 bowl Oats (cooked in water or milk) + 1 tbsp ground Flaxseed + 1 chopped Anjeer (Fig) + 5 Almonds + 5 Kaju (Cashews) + 1/2 cup Pomegranate/Berries.",
+          "tags": ["High Fiber", "Heart Healthy"]
+        },
+        {
+          "name": "Probiotic Power Bowl",
+          "description": "1 large bowl Curd (Dahi) + 1 scoop Whey Protein (optional, but good) + 1 tbsp ground Flaxseed + 1 cup mixed seasonal Fruit (Apple, Pomegranate, Papaya).",
+          "tags": ["High Protein", "Gut Health"]
+        },
+        {
+          "name": "Easy Protein Salad",
+          "description": "1 bowl Sprouts Salad + 150g Paneer (cubed, raw or sautéed) + 10 Almonds + 10 Walnuts.",
+          "tags": ["High Protein", "Veg"]
+        }
+      ]
+    },
+    "lunchOptions": {
+      "title": "Lunch Formula (Protein + Veg + Fiber + Carb)",
+      "proTips": [
+        "**The Mutton Rule:** Your cholesterol ($300.9$) is too high for mutton. For this 12-week phase, mutton is OFF the menu. It is extremely high in saturated fat.",
+        "**Chicken & Rice:** You like chicken and rice. This is a great lunch. 150g of home-cooked chicken, 1 katori sabji, 1 side of curd, and your 1 small katori of rice is a perfect, balanced meal."
+      ],
+      "formula": [
+        "1 Large katori Protein (Dal, Chickpeas, Rajma, 150g Chicken, 150g Paneer).",
+        "1 katori Sabji (any home-cooked vegetable, try to include greens).",
+        "1 small katori Rice (Control this portion!).",
+        "1 side of Curd (Dahi) or 1/2 cup Easy Raw Veg (Cucumber, Tomato, Onion)."
+      ]
+    },
+    "snackOptions": {
+      "title": "Crucial Snack Options (Choose 1)",
+      "note": "Do not skip this. This is your 'bridge' to a smart dinner. All are 'out of the box' and require no prep.",
+      "options": [
+        {
+          "name": "Probiotic Snack",
+          "description": "1 glass Buttermilk (chaas) + 1 tbsp ground Flaxseed.",
+          "tags": ["Quick", "Gut Health"]
+        },
+        {
+          "name": "Simple & Savory",
+          "description": "1 large handful (about 1 cup) of Roasted Chana.",
+          "tags": ["Quick", "High Fiber"]
+        },
+        {
+          "name":"Fruit & Fat",
+          "description": "1 Apple + 10-15 Almonds.",
+          "tags": ["Quick", "Heart Healthy"]
+        },
+        {
+          "name": "Antioxidant Snack",
+          "description": "1 cup Pomegranate + 10 Walnuts.",
+          "tags": ["Quick", "Heart Healthy"]
+        },
+        {
+          "name": "Quick Energy",
+          "description": "2-3 Dates + 10 Almonds.",
+          "tags": ["Quick", "Energy"]
+        }
+      ]
+    },
+    "dinnerOptions": {
+      "title": "Dinner Options (Protein + Veg. NO RICE/ROTI/BIRYANI)",
+      "note": "This is your most important meal for fat loss. If you order out, make smart choices.",
+      "proTips": [
+        "Your habit of ordering Tandoori Chicken/Paneer Tikka is an excellent, healthy choice *as long as you skip the naan/roti/rice.*",
+        "Avoid heavy, creamy, or fried curries. Stick to 'dry' preparations (Tandoori, Tikka) or 'soups' (Dal Soup, Chicken Soup)."
+      ],
+      "options": [
+        {
+          "name": "Home: Paneer Dinner",
+          "description": "200g Paneer (sautéed/Tikka style) + 1 large bowl Sabji.",
+          "tags": ["Home", "Veg", "High Protein"]
+        },
+        {
+          "name": "Home: Soup Dinner",
+          "description": "Large bowl of Dal Soup or Chicken Soup (with 150g chicken pieces) + 1 bowl Sautéed Vegetables.",
+          "tags": ["Home", "Light"]
+        },
+        {
+          "name": "Home: Chicken Dinner",
+          "description": "150g home-cooked Chicken + 1 large bowl Sabji.",
+          "tags": ["Home", "High Protein"]
+        },
+        {
+          "name": "Ordering Out: Tandoori",
+          "description": "Tandoori Chicken (4-5 pieces) + 1 side of Green Salad (No Naan/Roti).",
+          "tags": ["External", "High Protein"]
+        },
+        {
+          "name": "Ordering Out: Tikka",
+          "description": "Paneer Tikka (1 plate) + Mint Chutney (No Naan/Roti).",
+          "tags": ["External", "Veg", "High Protein"]
+        }
+      ]
+    }
+  }
+}
