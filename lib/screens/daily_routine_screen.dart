@@ -294,6 +294,24 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
       }
       
       await _scheduleAllNotifications();
+      
+      // Show confirmation to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Daily notifications scheduled successfully!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
       setState(() {
         isLoading = false;
       });
@@ -345,8 +363,11 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
     final timeParts = event.startTime.split(':');
     final eventMinutes = int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]);
     
-    // Check if we're within 15 minutes before or after the event start time
-    if ((currentMinutes >= eventMinutes - 15) && (currentMinutes <= eventMinutes + 15)) {
+    // Check if we're within 45 minutes before or 30 minutes after the event start time
+    final minBound = eventMinutes - 45;
+    final maxBound = eventMinutes + 30;
+    
+    if (currentMinutes >= minBound && currentMinutes <= maxBound) {
       return true;
     }
     
@@ -429,18 +450,6 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
         body: body,
         hour: hour,
         minute: minute,
-      );
-    }
-  }
-
-  Future<void> _cancelAllNotifications() async {
-    await _notificationService.cancelAll();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All notifications cancelled'),
-          duration: Duration(seconds: 2),
-        ),
       );
     }
   }
@@ -955,16 +964,6 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_off_outlined,
-              color: Color(0xFFDC2626),
-            ),
-            onPressed: _cancelAllNotifications,
-            tooltip: 'Cancel All Notifications',
-          ),
-        ],
       ),
       body: ListView.builder(
         controller: _scrollController,
