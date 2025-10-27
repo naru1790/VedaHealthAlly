@@ -64,27 +64,25 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                   ],
           ),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                // Hero Section - Modern & Bold
-                _buildHeroSection(size, isDark),
-                
-                const SizedBox(height: 60),
-                
-                // Feature Cards - Card Style
-                _buildFeatureCards(isDark),
-                
-                const SizedBox(height: 60),
-                
-                // Stats Section
-                _buildStatsSection(isDark),
-                
-                const SizedBox(height: 60),
-              ],
-            ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              // Hero Section - Modern & Bold
+              _buildHeroSection(size, isDark),
+              
+              const SizedBox(height: 60),
+              
+              // Feature Cards - Card Style
+              _buildFeatureCards(isDark),
+              
+              const SizedBox(height: 60),
+              
+              // Stats Section
+              _buildStatsSection(isDark),
+              
+              const SizedBox(height: 60),
+            ],
           ),
         ),
       ),
@@ -92,9 +90,9 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
   }
 
   Widget _buildHeroSection(Size size, bool isDark) {
-    return Container(
-      height: size.height * 0.65,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+    return SizedBox(
+      height: size.height,
+      width: size.width,
       child: Stack(
         children: [
           // Animated Floating Circles with Soft Gradients
@@ -166,9 +164,11 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
           ),
           
           // Main Content
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               // Animated Logo Circle
               FadeInDown(
                 delay: const Duration(milliseconds: 200),
@@ -310,6 +310,7 @@ class _LandingPageState extends State<LandingPage> with TickerProviderStateMixin
                 ),
               ),
             ],
+            ),
           ),
         ],
       ),
