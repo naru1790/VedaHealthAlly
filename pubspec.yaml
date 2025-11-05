@@ -58,6 +58,9 @@ dependencies:
   
   # State persistence
   shared_preferences: ^2.2.2
+  
+  # Keep screen awake during workouts
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:
@@ -97,7 +100,9 @@ flutter:
   assets:
     - assets/lottie/
     - assets/sounds/
+    - bdata/DailyRoutine.json
     - bdata/DailyWorkout.json
+    - bdata/HealthReport.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

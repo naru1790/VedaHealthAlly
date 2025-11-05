@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../core/theme/app_colors.dart';
 
 // ============================================================================
@@ -165,12 +166,80 @@ class Component {
   }
 }
 
+// Cardio Interval Models
+class CardioInterval {
+  final String activity;
+  final int durationSeconds;
+
+  CardioInterval({
+    required this.activity,
+    required this.durationSeconds,
+  });
+
+  factory CardioInterval.fromJson(Map<String, dynamic> json) {
+    return CardioInterval(
+      activity: json['activity'] ?? '',
+      durationSeconds: json['durationSeconds'] ?? 0,
+    );
+  }
+}
+
+class CardioRoutine {
+  final List<CardioInterval> intervals;
+  final int repeat;
+  final String? note;
+
+  CardioRoutine({
+    required this.intervals,
+    required this.repeat,
+    this.note,
+  });
+
+  factory CardioRoutine.fromJson(Map<String, dynamic> json) {
+    return CardioRoutine(
+      intervals: (json['intervals'] as List? ?? [])
+          .map((e) => CardioInterval.fromJson(e))
+          .toList(),
+      repeat: json['repeat'] ?? 1,
+      note: json['note'],
+    );
+  }
+}
+
+class CardioProgression {
+  final WeekRange weekRange;
+  final String label;
+  final int totalDurationMinutes;
+  final CardioRoutine routine;
+
+  CardioProgression({
+    required this.weekRange,
+    required this.label,
+    required this.totalDurationMinutes,
+    required this.routine,
+  });
+
+  factory CardioProgression.fromJson(Map<String, dynamic> json) {
+    return CardioProgression(
+      weekRange: WeekRange.fromJson(json['weekRange']),
+      label: json['label'] ?? '',
+      totalDurationMinutes: json['totalDurationMinutes'] ?? 0,
+      routine: CardioRoutine.fromJson(json['routine']),
+    );
+  }
+}
+
 class WorkoutBlock {
   final String blockId;
   final String title;
   final String blockType;
   final List<Exercise> exercises;
   final int? estimatedDurationMinutes;
+  final List<CardioProgression>? cardioProgression;
+  final String? notes;
+
+  // Cache for generated cardio exercises per week
+  final Map<int, List<Exercise>> _cardioExerciseCache = {};
 
   WorkoutBlock({
     required this.blockId,
@@ -178,6 +247,8 @@ class WorkoutBlock {
     required this.blockType,
     required this.exercises,
     this.estimatedDurationMinutes,
+    this.cardioProgression,
+    this.notes,
   });
 
   factory WorkoutBlock.fromJson(Map<String, dynamic> json) {
@@ -189,7 +260,70 @@ class WorkoutBlock {
           .map((e) => Exercise.fromJson(e))
           .toList(),
       estimatedDurationMinutes: json['estimatedDurationMinutes'] as int?,
+      cardioProgression: json['progression'] != null
+          ? (json['progression'] as List).map((e) => CardioProgression.fromJson(e)).toList()
+          : null,
+      notes: json['notes'],
     );
+  }
+  
+  bool get isCardioIntervals => blockType == 'CARDIO_INTERVALS';
+  
+  // Get cardio progression for specific week
+  CardioProgression? getCardioProgressionForWeek(int week) {
+    if (cardioProgression == null) return null;
+    for (var prog in cardioProgression!) {
+      if (prog.weekRange.contains(week)) {
+        return prog;
+      }
+    }
+    return null;
+  }
+  
+  // Convert cardio intervals to exercises for the given week (with caching)
+  List<Exercise> getExercisesForWeek(int week) {
+    if (!isCardioIntervals || exercises.isNotEmpty) {
+      return exercises;
+    }
+    
+    // Check cache first
+    if (_cardioExerciseCache.containsKey(week)) {
+      return _cardioExerciseCache[week]!;
+    }
+    
+    // Convert cardio intervals to exercises
+    final cardioProg = getCardioProgressionForWeek(week);
+    if (cardioProg == null) return [];
+    
+    print('🏗️ Building cardio exercises for week $week (one-time only)');
+    
+    // For cardio intervals, we need to repeat the interval pattern multiple times
+    // For example: (Jog 60s, Walk 240s) x 8 rounds
+    List<Exercise> cardioExercises = [];
+    
+    // Repeat the interval pattern according to the routine.repeat value
+    for (int round = 0; round < cardioProg.routine.repeat; round++) {
+      for (var interval in cardioProg.routine.intervals) {
+        cardioExercises.add(Exercise(
+          exerciseId: 'cardio_${interval.activity.toLowerCase().replaceAll(' ', '_')}_round${round + 1}',
+          name: '${interval.activity} (Round ${round + 1}/${cardioProg.routine.repeat})',
+          progression: null,
+          execution: Execution(
+            type: 'DURATION',
+            durationSeconds: interval.durationSeconds,
+            minReps: null,
+            maxReps: null,
+          ),
+        ));
+      }
+    }
+    
+    print('✅ Created ${cardioExercises.length} cardio exercises in alternating pattern');
+    
+    // Cache the result
+    _cardioExerciseCache[week] = cardioExercises;
+    
+    return cardioExercises;
   }
 }
 
@@ -305,7 +439,7 @@ class Execution {
       case 'DURATION':
         return '${durationSeconds}s${description != null ? ' ($description)' : ''}';
       case 'DURATION_RANGE':
-        return '${minSeconds}-${maxSeconds}s${description != null ? ' ($description)' : ''}';
+        return '$minSeconds-${maxSeconds}s${description != null ? ' ($description)' : ''}';
       case 'AMRAP':
         return 'As Many Reps As Possible';
       default:
@@ -386,7 +520,7 @@ class _BlockTimeData {
 // ============================================================================
 
 class WorkoutWizardScreen extends StatefulWidget {
-  const WorkoutWizardScreen({Key? key}) : super(key: key);
+  const WorkoutWizardScreen({super.key});
 
   @override
   State<WorkoutWizardScreen> createState() => _WorkoutWizardScreenState();
@@ -397,6 +531,10 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   Session? _currentSession;
   WorkoutProgressState _progressState = WorkoutProgressState.initial();
   
+  // Day and session selection
+  String? _selectedDay;
+  int _selectedSessionIndex = 0;
+  
   // Timer for rest periods
   Timer? _restTimer;
   int _restSecondsRemaining = 0;
@@ -404,6 +542,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   
   // Timer for duration-based exercises
   Timer? _exerciseTimer;
+  Timer? _countdownTimer;
   int _exerciseSecondsRemaining = 0;
   bool _isCountingDown = false;
   int _countdownSeconds = 3;
@@ -411,8 +550,8 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   // Audio player
   final AudioPlayer _audioPlayer = AudioPlayer();
   
-  // Current week (hardcoded to week 1 for this example)
-  final int _currentWeek = 1;
+  // Current week - calculated from program start date
+  int _currentWeek = 1;
 
   // Time tracking for progress calculation
   int _totalEstimatedSeconds = 0;
@@ -425,6 +564,9 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadWorkoutData();
+    _loadCurrentWeek();
+    // Enable wakelock to keep screen on during workout
+    WakelockPlus.enable();
   }
 
   @override
@@ -436,7 +578,10 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     }
     _restTimer?.cancel();
     _exerciseTimer?.cancel();
+    _countdownTimer?.cancel();
     _audioPlayer.dispose();
+    // Disable wakelock when leaving workout screen
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -456,8 +601,12 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   void _pauseTimers() {
     _restTimer?.cancel();
     _exerciseTimer?.cancel();
+    _countdownTimer?.cancel();
     _restTimer = null;
     _exerciseTimer = null;
+    _countdownTimer = null;
+    // Note: Timer states (_restSecondsRemaining, _exerciseSecondsRemaining, etc.) 
+    // are preserved and will be used to resume
   }
 
   void _resumeTimersIfNeeded() {
@@ -467,11 +616,25 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       return;
     }
 
-    // Resume rest timer if in rest state
-    if (_progressState.currentActivityState == ActivityState.rest) {
-      _startRestTimer();
+    // Resume countdown timer if we were counting down
+    if (_isCountingDown && _countdownSeconds > 0) {
+      _startCountdownAndExercise(_exerciseSecondsRemaining);
+      return;
     }
-    // Note: Exercise timer is handled by duration-based exercises which auto-start
+
+    // Resume exercise timer if in exercise state with time remaining
+    if (_progressState.currentActivityState == ActivityState.exercise && 
+        _exerciseSecondsRemaining > 0) {
+      _startExerciseTimer();
+      return;
+    }
+
+    // Resume rest timer if in rest state with time remaining
+    if (_progressState.currentActivityState == ActivityState.rest && 
+        _restSecondsRemaining > 0) {
+      _startRestTimer();
+      return;
+    }
   }
 
   Future<void> _saveWorkoutState() async {
@@ -495,6 +658,10 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       await prefs.setInt('totalSetsForExercise', _progressState.totalSetsForExercise);
       await prefs.setInt('restSecondsRemaining', _restSecondsRemaining);
       await prefs.setBool('restAlarmSounded', _restAlarmSounded);
+      // Save exercise timer state
+      await prefs.setInt('exerciseSecondsRemaining', _exerciseSecondsRemaining);
+      await prefs.setBool('isCountingDown', _isCountingDown);
+      await prefs.setInt('countdownSeconds', _countdownSeconds);
       await prefs.setBool('hasWorkoutInProgress', true);
       
       print('Workout state saved successfully');
@@ -528,6 +695,9 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       final totalSets = prefs.getInt('totalSetsForExercise') ?? 0;
       final restSecondsRemaining = prefs.getInt('restSecondsRemaining') ?? 0;
       final restAlarmSounded = prefs.getBool('restAlarmSounded') ?? false;
+      final exerciseSecondsRemaining = prefs.getInt('exerciseSecondsRemaining') ?? 0;
+      final isCountingDown = prefs.getBool('isCountingDown') ?? false;
+      final countdownSeconds = prefs.getInt('countdownSeconds') ?? 3;
 
       setState(() {
         _progressState = WorkoutProgressState._internal(
@@ -543,6 +713,9 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
         );
         _restSecondsRemaining = restSecondsRemaining;
         _restAlarmSounded = restAlarmSounded;
+        _exerciseSecondsRemaining = exerciseSecondsRemaining;
+        _isCountingDown = isCountingDown;
+        _countdownSeconds = countdownSeconds;
       });
       
       // Resume timers if we were in an active workout state
@@ -568,6 +741,9 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       await prefs.remove('totalSetsForExercise');
       await prefs.remove('restSecondsRemaining');
       await prefs.remove('restAlarmSounded');
+      await prefs.remove('exerciseSecondsRemaining');
+      await prefs.remove('isCountingDown');
+      await prefs.remove('countdownSeconds');
       await prefs.setBool('hasWorkoutInProgress', false);
       
       print('Workout state cleared');
@@ -596,6 +772,8 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
       setState(() {
         _program = program;
+        _selectedDay = todaySchedule.dayOfWeek;
+        _selectedSessionIndex = 0;
         _currentSession = todaySchedule.sessions.first;
         _totalEstimatedSeconds = _calculateTotalEstimatedTime();
       });
@@ -607,6 +785,100 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       }
     } catch (e) {
       print('Error loading workout data: $e');
+    }
+  }
+
+  // ============================================================================
+  // WEEK CALCULATION FROM PROGRAM START DATE
+  // ============================================================================
+
+  Future<void> _loadCurrentWeek() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Check if program start date exists
+    final startDateString = prefs.getString('program_start_date');
+    
+    if (startDateString == null) {
+      // First time - set today as start date
+      await _setProgramStartDate();
+      setState(() {
+        _currentWeek = 1;
+      });
+      print('📅 Program started! Week 1');
+    } else {
+      // Calculate week from start date
+      final startDate = DateTime.parse(startDateString);
+      final calculatedWeek = _calculateWeekFromStartDate(startDate);
+      setState(() {
+        _currentWeek = calculatedWeek;
+      });
+      print('📅 Current week: $_currentWeek (Started: ${startDate.toLocal().toString().split(' ')[0]})');
+    }
+  }
+
+  Future<void> _setProgramStartDate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setString('program_start_date', now.toIso8601String());
+  }
+
+  int _calculateWeekFromStartDate(DateTime startDate) {
+    final now = DateTime.now();
+    final daysSinceStart = now.difference(startDate).inDays;
+    final weekNumber = (daysSinceStart ~/ 7) + 1;
+    
+    // Clamp between 1 and 12 (your program is 12 weeks)
+    return weekNumber.clamp(1, 12);
+  }
+
+  // Optional: Reset program (for testing or restarting)
+  Future<void> _resetProgramStartDate() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('program_start_date');
+    await _loadCurrentWeek();
+  }
+
+  String _getWeekPhaseLabel() {
+    if (_currentWeek >= 1 && _currentWeek <= 4) {
+      return 'Foundation Phase - Building Base Strength';
+    } else if (_currentWeek >= 5 && _currentWeek <= 8) {
+      return 'Build Phase - Increasing Intensity';
+    } else if (_currentWeek >= 9 && _currentWeek <= 12) {
+      return 'Stamina Phase - Peak Performance';
+    }
+    return 'Phase 1: Foundation Building';
+  }
+
+  void _onDayChanged(String? newDay) {
+    if (newDay == null || _program == null) return;
+    
+    final daySchedule = _program!.weeklySchedule.firstWhere(
+      (day) => day.dayOfWeek == newDay,
+      orElse: () => _program!.weeklySchedule.first,
+    );
+    
+    setState(() {
+      _selectedDay = newDay;
+      _selectedSessionIndex = 0;
+      _currentSession = daySchedule.sessions.first;
+      _totalEstimatedSeconds = _calculateTotalEstimatedTime();
+    });
+  }
+
+  void _onSessionChanged(int? newIndex) {
+    if (newIndex == null || _program == null || _selectedDay == null) return;
+    
+    final daySchedule = _program!.weeklySchedule.firstWhere(
+      (day) => day.dayOfWeek == _selectedDay,
+      orElse: () => _program!.weeklySchedule.first,
+    );
+    
+    if (newIndex >= 0 && newIndex < daySchedule.sessions.length) {
+      setState(() {
+        _selectedSessionIndex = newIndex;
+        _currentSession = daySchedule.sessions[newIndex];
+        _totalEstimatedSeconds = _calculateTotalEstimatedTime();
+      });
     }
   }
 
@@ -693,10 +965,11 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   Exercise? _getCurrentExercise() {
     final block = _getCurrentBlock();
     if (block == null) return null;
-    if (_progressState.currentExerciseIndexInBlock >= block.exercises.length) {
+    final exercises = block.getExercisesForWeek(_currentWeek);
+    if (_progressState.currentExerciseIndexInBlock >= exercises.length) {
       return null;
     }
-    return block.exercises[_progressState.currentExerciseIndexInBlock];
+    return exercises[_progressState.currentExerciseIndexInBlock];
   }
 
   Progression? _getCurrentProgression() {
@@ -774,9 +1047,11 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     final timeData = _getBlockTimeData(block);
     int completedSeconds = 0;
 
+    final exercises = block.getExercisesForWeek(_currentWeek);
+
     // Add time for completed exercises
     for (int exIdx = 0; exIdx < _progressState.currentExerciseIndexInBlock; exIdx++) {
-      final exercise = block.exercises[exIdx];
+      final exercise = exercises[exIdx];
       final progression = _getProgressionForExercise(exercise);
       if (progression == null) continue;
 
@@ -798,7 +1073,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       }
 
       // Add transition time
-      if (exIdx < block.exercises.length - 1) {
+      if (exIdx < exercises.length - 1) {
         completedSeconds += 10;
       }
     }
@@ -856,9 +1131,11 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     int totalTransitionSeconds = 0;
     int totalRestSeconds = 0;
 
+    final exercises = block.getExercisesForWeek(_currentWeek);
+    
     // Calculate time used by duration-based exercises and rest times
-    for (int exIdx = 0; exIdx < block.exercises.length; exIdx++) {
-      final exercise = block.exercises[exIdx];
+    for (int exIdx = 0; exIdx < exercises.length; exIdx++) {
+      final exercise = exercises[exIdx];
       final progression = _getProgressionForExercise(exercise);
       if (progression == null) continue;
 
@@ -878,7 +1155,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       }
 
       // Add transition time between exercises
-      if (exIdx < block.exercises.length - 1) {
+      if (exIdx < exercises.length - 1) {
         totalTransitionSeconds += 10;
       }
     }
@@ -889,7 +1166,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
     // Count only rep-based sets for time distribution
     int totalRepSets = 0;
-    for (final exercise in block.exercises) {
+    for (final exercise in exercises) {
       final progression = _getProgressionForExercise(exercise);
       if (progression != null && !progression.execution.isDurationBased) {
         totalRepSets += progression.sets;
@@ -926,8 +1203,10 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     const int avgSetupTimeSeconds = 5;
     const int transitionBetweenExercises = 10;
 
-    for (int exIdx = 0; exIdx < block.exercises.length; exIdx++) {
-      final exercise = block.exercises[exIdx];
+    final exercises = block.getExercisesForWeek(_currentWeek);
+    
+    for (int exIdx = 0; exIdx < exercises.length; exIdx++) {
+      final exercise = exercises[exIdx];
       final progression = _getProgressionForExercise(exercise);
       if (progression == null) continue;
 
@@ -951,7 +1230,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
         totalSeconds += restTime * (sets - 1);
       }
 
-      if (exIdx < block.exercises.length - 1) {
+      if (exIdx < exercises.length - 1) {
         totalSeconds += transitionBetweenExercises;
       }
     }
@@ -989,10 +1268,55 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       return;
     }
 
-    // EXERCISE -> REST
+    // EXERCISE -> REST (or skip rest for cardio intervals)
     if (currentActivity == ActivityState.exercise) {
-      _moveToRest();
-      _saveWorkoutState(); // Save after each exercise
+      // Check if this is a cardio interval - skip rest and go directly to next exercise
+      final exercise = _getCurrentExercise();
+      final isCardioInterval = exercise?.exerciseId.startsWith('cardio_') ?? false;
+      
+      if (isCardioInterval) {
+        // Skip rest for cardio intervals - go directly to next exercise
+        debugPrint('Cardio interval completed - moving directly to next interval');
+        final nextExerciseIndex = _progressState.currentExerciseIndexInBlock + 1;
+
+        // More exercises in current block?
+        if (nextExerciseIndex < _progressState.totalExercisesInBlock) {
+          final block = _getCurrentBlock()!;
+          final exercises = block.getExercisesForWeek(_currentWeek);
+          final nextExercise = exercises[nextExerciseIndex];
+          final nextProgression = _getProgressionForExercise(nextExercise);
+
+          setState(() {
+            _progressState = _progressState.copyWith(
+              currentActivityState: ActivityState.exercise,
+              currentExerciseIndexInBlock: nextExerciseIndex,
+              currentSet: 1,
+              totalSetsForExercise: nextProgression?.sets ?? 1,
+            );
+          });
+          
+          // Automatically start countdown for next duration-based cardio exercise
+          if (nextProgression?.execution.isDurationBased ?? false) {
+            final duration = nextProgression!.execution.durationSeconds ??
+                nextProgression.execution.minSeconds ??
+                30;
+            debugPrint('⏱️ Auto-starting countdown for ${nextExercise.name} with duration: ${duration}s');
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _startCountdownAndExercise(duration);
+              }
+            });
+          }
+        } else {
+          // All cardio intervals completed -> Move to next component
+          _moveToNextComponent();
+        }
+        _saveWorkoutState();
+      } else {
+        // Normal exercise - go to rest
+        _moveToRest();
+        _saveWorkoutState(); // Save after each exercise
+      }
       return;
     }
 
@@ -1011,9 +1335,12 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
     final firstComponent = _currentSession!.components[0];
     final firstBlock = _program!.workoutLibrary[firstComponent.blockId];
-    if (firstBlock == null || firstBlock.exercises.isEmpty) return;
+    if (firstBlock == null) return;
+    
+    final exercises = firstBlock.getExercisesForWeek(_currentWeek);
+    if (exercises.isEmpty) return;
 
-    final firstExercise = firstBlock.exercises[0];
+    final firstExercise = exercises[0];
     final firstProgression = _getProgressionForExercise(firstExercise);
     
     final phase = _determinePhase(firstBlock.blockType);
@@ -1026,7 +1353,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
         currentRound: 1, // Not used in Standard Sets, kept for state compatibility
         totalRoundsInComponent: 1, // Not used in Standard Sets
         currentExerciseIndexInBlock: 0,
-        totalExercisesInBlock: firstBlock.exercises.length,
+        totalExercisesInBlock: exercises.length,
         currentSet: 1,
         totalSetsForExercise: firstProgression?.sets ?? 1,
       );
@@ -1035,20 +1362,45 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
   void _moveToRest() {
     final progression = _getCurrentProgression();
-    if (progression == null) return;
+    if (progression == null) {
+      debugPrint('ERROR: Cannot move to rest - no progression found');
+      return;
+    }
 
-    // Use max rest time from exercise JSON (includes grace period)
-    final maxRestSeconds = progression.rest?.getMaxRestSeconds() ?? 45;
+    // Check if this is a cardio interval exercise (no rest defined)
+    final exercise = _getCurrentExercise();
+    final isCardioInterval = exercise?.exerciseId.startsWith('cardio_') ?? false;
+    
+    // Use minimum rest time from exercise JSON
+    // For cardio intervals, use very short transition (5s)
+    // For other exercises, ensure at least 10 seconds for UI visibility
+    int minRestSeconds;
+    if (isCardioInterval) {
+      minRestSeconds = 5; // Quick transition between cardio intervals
+    } else {
+      minRestSeconds = progression.rest?.getMinRestSeconds() ?? 30;
+      minRestSeconds = minRestSeconds < 10 ? 10 : minRestSeconds;
+    }
+
+    debugPrint('Moving to REST: duration=$minRestSeconds seconds (cardio: $isCardioInterval)');
 
     setState(() {
       _progressState = _progressState.copyWith(
         currentActivityState: ActivityState.rest,
       );
-      _restSecondsRemaining = maxRestSeconds;
+      _restSecondsRemaining = minRestSeconds;
       _restAlarmSounded = false; // Reset alarm flag
     });
 
-    _startRestTimer();
+    // Delay timer start to ensure UI fully renders first
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted && _progressState.currentActivityState == ActivityState.rest) {
+        debugPrint('Starting rest timer with $_restSecondsRemaining seconds remaining');
+        _startRestTimer();
+      } else {
+        debugPrint('WARNING: Rest state changed before timer could start');
+      }
+    });
   }
 
   void _moveFromRest() {
@@ -1071,7 +1423,8 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     // More exercises in current block?
     if (nextExerciseIndex < _progressState.totalExercisesInBlock) {
       final block = _getCurrentBlock()!;
-      final nextExercise = block.exercises[nextExerciseIndex];
+      final exercises = block.getExercisesForWeek(_currentWeek);
+      final nextExercise = exercises[nextExerciseIndex];
       final nextProgression = _getProgressionForExercise(nextExercise);
 
       setState(() {
@@ -1096,9 +1449,12 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     if (nextComponentIndex < _currentSession!.components.length) {
       final nextComponent = _currentSession!.components[nextComponentIndex];
       final nextBlock = _program!.workoutLibrary[nextComponent.blockId];
-      if (nextBlock == null || nextBlock.exercises.isEmpty) return;
+      if (nextBlock == null) return;
+      
+      final exercises = nextBlock.getExercisesForWeek(_currentWeek);
+      if (exercises.isEmpty) return;
 
-      final firstExercise = nextBlock.exercises[0];
+      final firstExercise = exercises[0];
       final firstProgression = _getProgressionForExercise(firstExercise);
       final nextPhase = _determinePhase(nextBlock.blockType);
 
@@ -1110,7 +1466,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
           currentRound: 1, // Not used in Standard Sets
           totalRoundsInComponent: 1, // Not used in Standard Sets
           currentExerciseIndexInBlock: 0,
-          totalExercisesInBlock: nextBlock.exercises.length,
+          totalExercisesInBlock: exercises.length,
           currentSet: 1,
           totalSetsForExercise: firstProgression?.sets ?? 1,
         );
@@ -1160,27 +1516,30 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   }
 
   void _startRestTimer() {
+    // Cancel any existing rest timer before starting new one
+    _restTimer?.cancel();
+    
+    // Safety check: don't start timer if rest duration is invalid
+    if (_restSecondsRemaining <= 0) {
+      debugPrint('Warning: Rest timer started with invalid duration: $_restSecondsRemaining');
+      _restSecondsRemaining = 5; // Force minimum 5 seconds
+    }
+    
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        _restTimer = null;
+        return;
+      }
+      
       setState(() {
         if (_restSecondsRemaining > 0) {
           _restSecondsRemaining--;
-          
-          // Get current progression for alarm timing
-          final progression = _getCurrentProgression();
-          if (progression != null) {
-            // Sound alarm at minimum rest time
-            final minRestTime = progression.rest?.getMinRestSeconds() ?? 30;
-            final maxRestTime = progression.rest?.getMaxRestSeconds() ?? 45;
-            final timeElapsed = maxRestTime - _restSecondsRemaining;
-            
-            if (!_restAlarmSounded && timeElapsed >= minRestTime) {
-              _restAlarmSounded = true;
-              _playSound();
-            }
-          }
         } else {
-          // Auto-advance when max rest time reached
+          // Auto-advance when minimum rest time reached
           timer.cancel();
+          _restTimer = null;
+          _playSound();
           _moveToNextStep();
         }
       });
@@ -1189,6 +1548,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
   void _skipRest() {
     _restTimer?.cancel();
+    _restTimer = null;
     _moveToNextStep();
   }
 
@@ -1210,16 +1570,21 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   // ============================================================================
 
   void _startCountdownAndExercise(int exerciseSeconds) {
+    // Cancel any existing timers before starting new countdown
+    _countdownTimer?.cancel();
+    _exerciseTimer?.cancel();
+    
     setState(() {
       _isCountingDown = true;
       _countdownSeconds = 3;
     });
 
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdownSeconds > 1) {
         setState(() => _countdownSeconds--);
       } else {
         timer.cancel();
+        _countdownTimer = null;
         setState(() {
           _isCountingDown = false;
           _exerciseSecondsRemaining = exerciseSeconds;
@@ -1230,12 +1595,16 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   }
 
   void _startExerciseTimer() {
+    // Cancel any existing exercise timer before starting new one
+    _exerciseTimer?.cancel();
+    
     _exerciseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_exerciseSecondsRemaining > 0) {
           _exerciseSecondsRemaining--;
         } else {
           timer.cancel();
+          _exerciseTimer = null;
           _playSound();
           _moveToNextStep();
         }
@@ -1245,8 +1614,12 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
 
   void _skipExercise() {
     _exerciseTimer?.cancel();
+    _exerciseTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
     setState(() {
       _exerciseSecondsRemaining = 0;
+      _isCountingDown = false;
     });
     _moveToNextStep();
   }
@@ -1256,9 +1629,13 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
   // ============================================================================
 
   void _goToPreviousStep() {
-    // Stop any active timers first
+    // Stop any active timers first and null them out
     _restTimer?.cancel();
+    _restTimer = null;
     _exerciseTimer?.cancel();
+    _exerciseTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
 
     // If in rest, go back to the exercise we just completed
     if (_progressState.currentActivityState == ActivityState.rest) {
@@ -1292,8 +1669,9 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
         final prevBlock = _program!.workoutLibrary[prevComponent.blockId];
         if (prevBlock == null) return;
 
-        final lastExerciseIndex = prevBlock.exercises.length - 1;
-        final lastExercise = prevBlock.exercises[lastExerciseIndex];
+        final prevExercises = prevBlock.getExercisesForWeek(_currentWeek);
+        final lastExerciseIndex = prevExercises.length - 1;
+        final lastExercise = prevExercises[lastExerciseIndex];
         final lastProgression = _getProgressionForExercise(lastExercise);
         final prevPhase = _determinePhase(prevBlock.blockType);
 
@@ -1307,7 +1685,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
             totalSetsForExercise: lastProgression?.sets ?? 1,
             currentRound: 1,
             totalRoundsInComponent: 1,
-            totalExercisesInBlock: prevBlock.exercises.length,
+            totalExercisesInBlock: prevExercises.length,
           );
           _isCountingDown = false;
           _exerciseSecondsRemaining = 0;
@@ -1318,7 +1696,8 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
       // Go to previous exercise in same block
       final prevExerciseIndex = _progressState.currentExerciseIndexInBlock - 1;
       final block = _getCurrentBlock()!;
-      final prevExercise = block.exercises[prevExerciseIndex];
+      final exercises = block.getExercisesForWeek(_currentWeek);
+      final prevExercise = exercises[prevExerciseIndex];
       final prevProgression = _getProgressionForExercise(prevExercise);
 
       setState(() {
@@ -1570,11 +1949,239 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final totalTime = _formatTime(_totalEstimatedSeconds);
     
+    // Get available sessions for selected day
+    final daySchedule = _program?.weeklySchedule.firstWhere(
+      (day) => day.dayOfWeek == _selectedDay,
+      orElse: () => _program!.weeklySchedule.first,
+    );
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Day Selector Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primaryLight.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      color: AppColors.primaryLight,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Select Day',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primaryLight.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedDay,
+                      isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, color: AppColors.primaryLight),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                      ),
+                      dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      items: _program?.weeklySchedule.map((day) {
+                        return DropdownMenuItem<String>(
+                          value: day.dayOfWeek,
+                          child: Text(day.dayOfWeek),
+                        );
+                      }).toList() ?? [],
+                      onChanged: _onDayChanged,
+                    ),
+                  ),
+                ),
+                // Session Selector (if multiple sessions available)
+                if (daySchedule != null && daySchedule.sessions.length > 1) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fitness_center_rounded,
+                        color: AppColors.secondaryLight,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Select Workout',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryLight.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.secondaryLight.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedSessionIndex,
+                        isExpanded: true,
+                        icon: Icon(Icons.arrow_drop_down, color: AppColors.secondaryLight),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                        ),
+                        dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        items: daySchedule.sessions.asMap().entries.map((entry) {
+                          return DropdownMenuItem<int>(
+                            value: entry.key,
+                            child: Text(entry.value.title),
+                          );
+                        }).toList(),
+                        onChanged: _onSessionChanged,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Week Progress Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primaryLight.withOpacity(0.15),
+                  AppColors.secondaryLight.withOpacity(0.15),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primaryLight.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.timeline_rounded,
+                    color: AppColors.primaryLight,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Week $_currentWeek of 12',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getWeekPhaseLabel(),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Optional: Reset button (for testing)
+                if (_currentWeek > 1)
+                  IconButton(
+                    icon: Icon(Icons.refresh_rounded, color: AppColors.primaryLight),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Reset Program?'),
+                          content: const Text('This will restart your 12-week program from Week 1.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Reset'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await _resetProgramStartDate();
+                      }
+                    },
+                    tooltip: 'Reset to Week 1',
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
           // Title and Time Card
           Container(
             width: double.infinity,
@@ -1661,7 +2268,8 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
               if (block == null) return const SizedBox.shrink();
               
               final componentTime = _formatTime(_calculateComponentTime(component));
-              final exerciseCount = block.exercises.length;
+              final exercises = block.getExercisesForWeek(_currentWeek);
+              final exerciseCount = exercises.length;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1732,7 +2340,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
                             : const Color(0xFFE8ECF1),
                       ),
                       const SizedBox(height: 8),
-                      ...block.exercises.map((exercise) {
+                      ...exercises.map((exercise) {
                         final progression = _getProgressionForExercise(exercise);
                         final sets = progression?.sets ?? 1;
                         return Padding(
@@ -1780,7 +2388,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                       const SizedBox(height: 8),
                     ],
                   ),
@@ -2014,6 +2622,7 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
                         final duration = progression.execution.durationSeconds ??
                             progression.execution.minSeconds ??
                             30;
+                        print('⏱️ Starting timer for ${exercise.name} with duration: ${duration}s (durationSeconds: ${progression.execution.durationSeconds})');
                         _startCountdownAndExercise(duration);
                       } else {
                         _moveToNextStep();
@@ -2296,20 +2905,25 @@ class _WorkoutWizardScreenState extends State<WorkoutWizardScreen> with WidgetsB
     } else {
       // Check if there's a next exercise
       final block = _getCurrentBlock();
-      if (block != null && _progressState.currentExerciseIndexInBlock + 1 < block.exercises.length) {
-        final nextExercise = block.exercises[_progressState.currentExerciseIndexInBlock + 1];
-        final nextProgression = _getProgressionForExercise(nextExercise);
-        upNextText = '${nextExercise.name} (${nextProgression?.sets ?? 1} sets)';
-      } else {
-        // Check if there's a next component
-        final nextComponentIndex = _progressState.currentComponentIndex + 1;
-        if (nextComponentIndex < _currentSession!.components.length) {
-          final nextComponent = _currentSession!.components[nextComponentIndex];
-          final nextBlock = _program!.workoutLibrary[nextComponent.blockId];
-          upNextText = nextBlock?.title ?? 'Next Phase';
+      if (block != null) {
+        final exercises = block.getExercisesForWeek(_currentWeek);
+        if (_progressState.currentExerciseIndexInBlock + 1 < exercises.length) {
+          final nextExercise = exercises[_progressState.currentExerciseIndexInBlock + 1];
+          final nextProgression = _getProgressionForExercise(nextExercise);
+          upNextText = '${nextExercise.name} (${nextProgression?.sets ?? 1} sets)';
         } else {
-          upNextText = 'Workout Complete!';
+          // Check if there's a next component
+          final nextComponentIndex = _progressState.currentComponentIndex + 1;
+          if (nextComponentIndex < _currentSession!.components.length) {
+            final nextComponent = _currentSession!.components[nextComponentIndex];
+            final nextBlock = _program!.workoutLibrary[nextComponent.blockId];
+            upNextText = nextBlock?.title ?? 'Next Phase';
+          } else {
+            upNextText = 'Workout Complete!';
+          }
         }
+      } else {
+        upNextText = 'Workout Complete!';
       }
     }
 

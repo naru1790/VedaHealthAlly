@@ -1,248 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_routine_models.dart';
 import '../services/notification_service.dart';
 import '../core/theme/app_colors.dart';
-
-const String dailyRoutineJson = '''
-{
-  "programId": "plan_phase1_gold_001",
-  "programTitle": "Phase 1 (Gold): Accelerated Recovery Nutrition Plan",
-  "programDurationDays": 28,
-  "programGoals": [
-    "Dramatically reduce Triglycerides (240.4) and LDL Cholesterol (194.12).",
-    "Allow liver to heal (reduce GGT 185.6 and ALT 60.7).",
-    "Reduce 41-inch waist size by targeting visceral (belly) fat.",
-    "Correct B12 (106) and Vit D (10.7) deficiencies.",
-    "Improve gut health and nutrient absorption."
-  ],
-  "dailySchedule": {
-    "scheduleTemplates": {
-      "default": {
-        "templateName": "Default Weekday",
-        "timelineEvents": [
-          {
-            "eventId": "evt_wake",
-            "startTime": "06:00",
-            "title": "Wake, Hydrate & Supplement",
-            "eventType": "HABIT",
-            "tasks": [
-              "Drink 500-750ml of water immediately.",
-              "Take your Vitamin B12 supplement (on an empty stomach)."
-            ]
-          },
-          {
-            "eventId": "evt_workout",
-            "startTime": "06:30",
-            "endTime": "07:30",
-            "title": "Daily Workout",
-            "eventType": "WORKOUT",
-            "description": "Perform your 60-minute workout session as scheduled in your workout plan.",
-            "workoutReferenceId": "phase1_daily_workout"
-          },
-          {
-            "eventId": "evt_breakfast",
-            "startTime": "07:45",
-            "title": "Breakfast: Your Super-Meal",
-            "eventType": "MEAL",
-            "description": "This is your most important meal for recovery and cholesterol. Choose one option.",
-            "mealReferenceId": "breakfastMealOptions"
-          },
-          {
-            "eventId": "evt_hydration_1",
-            "startTime": "10:30",
-            "title": "Hydration Check",
-            "eventType": "HYDRATION",
-            "tasks": [
-              "Drink 500ml water."
-            ]
-          },
-          {
-            "eventId": "evt_lunch",
-            "startTime": "13:00",
-            "endTime": "14:00",
-            "title": "Lunch",
-            "eventType": "MEAL",
-            "description": "This is your main carb meal. Follow the 'Lunch Formula'.",
-            "mealReferenceId": "lunchOptions"
-          },
-          {
-            "eventId": "evt_hydration_2",
-            "startTime": "16:00",
-            "title": "Hydration Check",
-            "eventType": "HYDRATION",
-            "tasks": [
-              "Drink 500ml water."
-            ]
-          },
-          {
-            "eventId": "evt_snack",
-            "startTime": "16:30",
-            "endTime": "17:00",
-            "title": "Crucial Snack",
-            "eventType": "MEAL",
-            "description": "This is the 'bridge' that stops you from being starving at dinner. It is mandatory. Choose one option.",
-            "mealReferenceId": "snackOptions"
-          },
-          {
-            "eventId": "evt_habit_swap",
-            "startTime": "18:00",
-            "title": "Habit Swap",
-            "eventType": "HABIT",
-            "description": "Swap your evening milk tea for Green Tea or a Black Coffee (no sugar). Milk/sugar will make you hungrier right before dinner."
-          },
-          {
-            "eventId": "evt_dinner",
-            "startTime": "20:00",
-            "endTime": "20:30",
-            "title": "Dinner (Carb Curfew) & Supplement",
-            "eventType": "MEAL",
-            "description": "This is your most important meal for fat loss. Follow the rule: NO RICE, NO ROTI. Your meal is 'Protein + Vegetables'.",
-            "tasks": [
-              "Take your Omega-3 (Fish Oil) capsule *with* this meal."
-            ],
-            "mealReferenceId": "dinnerOptions"
-          },
-          {
-            "eventId": "evt_wind_down",
-            "startTime": "22:00",
-            "title": "Wind-Down Routine",
-            "eventType": "HABIT",
-            "description": "This replaces your 10 PM rice. It helps you manage stress (smoking trigger) and helps your cholesterol.",
-            "tasks": [
-              "Take 1 tbsp Psyllium Husk (Ispaghol) in a full glass of water.",
-              "NO phone/TV for 15 minutes. Read a book, listen to music, or do light stretches. This will help you sleep."
-            ]
-          },
-          {
-            "eventId": "evt_sleep",
-            "startTime": "22:30",
-            "title": "Sleep",
-            "eventType": "SLEEP",
-            "tasks": [
-              "Lights out. Aim for 7-8 hours of quality sleep."
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "weeklyOverrides": [
-    {
-      "dayOfWeek": "Sunday",
-      "eventIdToOverride": "evt_breakfast",
-      "newEvent": {
-        "eventId": "evt_breakfast_sun",
-        "startTime": "07:45",
-        "title": "Breakfast: Super-Meal & Vitamin D",
-        "eventType": "MEAL",
-        "description": "Today is your Vitamin D day. You MUST take it with your breakfast, as it needs fat (from nuts, eggs, etc.) for absorption.",
-        "tasks": [
-          "Take your Vitamin D 60,000 IU sachet WITH this meal."
-        ],
-        "mealReferenceId": "breakfastMealOptions"
-      }
-    }
-  ],
-  "mealLibrary": {
-    "breakfastMealOptions": {
-      "title": "Breakfast 'Super-Meal' Options (Choose 1)",
-      "options": [
-        {
-          "name": "Savory Protein Plate",
-          "description": "4 Boiled Egg Whites + 1 Whole Yolk. Side of 1 Apple. Plus a small handful (20g) of 'Mixed Nuts' (Almonds, Walnuts, Kaju).",
-          "tags": ["High Protein", "Low Carb"]
-        },
-        {
-          "name": "Cholesterol-Fighter Bowl (Oats)",
-          "description": "1 bowl Oats (cooked in water or milk) + 1 tbsp ground Flaxseed + 1 chopped Anjeer (Fig) + 5 Almonds + 5 Kaju (Cashews) + 1/2 cup Pomegranate/Berries.",
-          "tags": ["High Fiber", "Heart Healthy"]
-        },
-        {
-          "name": "Probiotic Power Bowl",
-          "description": "1 large bowl Curd (Dahi) + 1 scoop Whey Protein (optional, but good) + 1 tbsp ground Flaxseed + 1 cup mixed seasonal Fruit (Apple, Pomegranate, Papaya).",
-          "tags": ["High Protein", "Gut Health"]
-        },
-        {
-          "name": "Easy Protein Salad",
-          "description": "1 bowl Sprouts Salad + 150g Paneer (cubed, raw or sautéed) + 10 Almonds + 10 Walnuts.",
-          "tags": ["High Protein", "Veg"]
-        }
-      ]
-    },
-    "lunchOptions": {
-      "title": "Lunch Formula (Protein + Veg + Fiber + Carb)",
-      "formula": [
-        "1 Large katori Protein (Dal, Chickpeas, Rajma, 150g Chicken, 150g Paneer).",
-        "1 katori Sabji (any home-cooked vegetable, try to include greens).",
-        "1 small katori Rice (Control this portion!).",
-        "1 side of Curd (Dahi) or 1/2 cup Easy Raw Veg (Cucumber, Tomato, Onion)."
-      ]
-    },
-    "snackOptions": {
-      "title": "Crucial Snack Options (Choose 1)",
-      "options": [
-        {
-          "name": "Probiotic Snack",
-          "description": "1 glass Buttermilk (chaas) + 1 tbsp ground Flaxseed.",
-          "tags": ["Quick", "Gut Health"]
-        },
-        {
-          "name": "Simple & Savory",
-          "description": "1 large handful (about 1 cup) of Roasted Chana.",
-          "tags": ["Quick", "High Fiber"]
-        },
-        {
-          "name":"Fruit & Fat",
-          "description": "1 Apple + 10-15 Almonds.",
-          "tags": ["Quick", "Heart Healthy"]
-        },
-        {
-          "name": "Antioxidant Snack",
-          "description": "1 cup Pomegranate + 10 Walnuts.",
-          "tags": ["Quick", "Heart Healthy"]
-        },
-        {
-          "name": "Quick Energy",
-          "description": "2-3 Dates + 10 Almonds.",
-          "tags": ["Quick", "Energy"]
-        }
-      ]
-    },
-    "dinnerOptions": {
-      "title": "Dinner Options (Protein + Veg. NO RICE/ROTI/BIRYANI)",
-      "options": [
-        {
-          "name": "Home: Paneer Dinner",
-          "description": "200g Paneer (sautéed/Tikka style) + 1 large bowl Sabji.",
-          "tags": ["Home", "Veg", "High Protein"]
-        },
-        {
-          "name": "Home: Soup Dinner",
-          "description": "Large bowl of Dal Soup or Chicken Soup (with 150g chicken pieces) + 1 bowl Sautéed Vegetables.",
-          "tags": ["Home", "Light"]
-        },
-        {
-          "name": "Home: Chicken Dinner",
-          "description": "150g home-cooked Chicken + 1 large bowl Sabji.",
-          "tags": ["Home", "High Protein"]
-        },
-        {
-          "name": "Ordering Out: Tandoori",
-          "description": "Tandoori Chicken (4-5 pieces) + 1 side of Green Salad (No Naan/Roti).",
-          "tags": ["External", "High Protein"]
-        },
-        {
-          "name": "Ordering Out: Tikka",
-          "description": "Paneer Tikka (1 plate) + Mint Chutney (No Naan/Roti).",
-          "tags": ["External", "Veg", "High Protein"]
-        }
-      ]
-    }
-  }
-}
-''';
 
 class DailyRoutineScreen extends StatefulWidget {
   const DailyRoutineScreen({super.key});
@@ -272,7 +33,9 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
 
   Future<void> _loadData() async {
     try {
-      routinePlan = DailyRoutinePlan.fromJsonString(dailyRoutineJson);
+      // Load JSON from assets
+      final String jsonString = await rootBundle.loadString('bdata/DailyRoutine.json');
+      routinePlan = DailyRoutinePlan.fromJsonString(jsonString);
       
       // Get today's day of week
       final now = DateTime.now();
@@ -348,24 +111,51 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
     final timeParts = event.startTime.split(':');
     final eventMinutes = int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]);
     
-    // Check if we're within 45 minutes before or 30 minutes after the event start time
-    final minBound = eventMinutes - 45;
-    final maxBound = eventMinutes + 30;
+    // Show as current if we're within 60 minutes before the event start time
+    final minBound = eventMinutes - 60;
     
-    if (currentMinutes >= minBound && currentMinutes <= maxBound) {
-      return true;
-    }
-    
-    // If event has an end time, check if we're currently in it
+    // If event has an end time, check if we're currently in it or approaching it
     if (event.endTime != null) {
       final endTimeParts = event.endTime!.split(':');
       final endMinutes = int.parse(endTimeParts[0]) * 60 + int.parse(endTimeParts[1]);
-      if (currentMinutes >= eventMinutes && currentMinutes <= endMinutes) {
+      // Show from 60 min before start to end time
+      if (currentMinutes >= minBound && currentMinutes <= endMinutes) {
+        return true;
+      }
+    } else {
+      // For events without end time, show from 60 min before to 30 min after
+      final maxBound = eventMinutes + 30;
+      if (currentMinutes >= minBound && currentMinutes <= maxBound) {
         return true;
       }
     }
     
     return false;
+  }
+
+  String _getEventStatusLabel(TimelineEvent event) {
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+    
+    final timeParts = event.startTime.split(':');
+    final eventMinutes = int.parse(timeParts[0]) * 60 + int.parse(timeParts[1]);
+    
+    // If event has started or is happening now
+    if (currentMinutes >= eventMinutes) {
+      // Check if still ongoing (if has end time)
+      if (event.endTime != null) {
+        final endTimeParts = event.endTime!.split(':');
+        final endMinutes = int.parse(endTimeParts[0]) * 60 + int.parse(endTimeParts[1]);
+        if (currentMinutes <= endMinutes) {
+          return 'NOW';
+        }
+      } else if (currentMinutes <= eventMinutes + 30) {
+        return 'NOW';
+      }
+    }
+    
+    // Event is upcoming
+    return 'UPCOMING';
   }
 
   void _scrollToCurrentEvent() {
@@ -386,32 +176,28 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
   }
 
   Future<void> _scheduleNotificationsIfNeeded() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now();
-    final todayString = '${today.year}-${today.month}-${today.day}';
-    final lastScheduledDate = prefs.getString('last_notification_schedule_date');
+    // Always reschedule notifications to ensure they work
+    // Cancel all existing notifications first
+    await _notificationService.cancelAll();
     
-    // Only schedule if we haven't scheduled today yet
-    if (lastScheduledDate != todayString) {
-      await _scheduleAllNotifications();
-      await prefs.setString('last_notification_schedule_date', todayString);
-      
-      // Show confirmation to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('Daily notifications scheduled for today!'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
+    // Schedule fresh notifications
+    await _scheduleAllNotifications();
+    
+    // Show confirmation to user
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Text('Daily notifications scheduled successfully!'),
+            ],
           ),
-        );
-      }
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -979,6 +765,68 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
             ),
           ],
         ),
+        actions: [
+          // Test notification button
+          IconButton(
+            icon: Icon(
+              Icons.notifications_active,
+              color: AppColors.primaryLight,
+            ),
+            tooltip: 'Test Notifications',
+            onPressed: () async {
+              try {
+                // Check if notifications are enabled
+                final enabled = await _notificationService.areNotificationsEnabled();
+                
+                if (!enabled) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('❌ Notifications are disabled! Please enable them in Settings.'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                
+                // Show test notification
+                await _notificationService.showTestNotification();
+                
+                // Get pending notifications count
+                final pending = await _notificationService.getPendingNotifications();
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('✅ Test notification sent!'),
+                          const SizedBox(height: 4),
+                          Text('${pending.length} notifications scheduled'),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         controller: _scrollController,
@@ -1122,9 +970,9 @@ class _DailyRoutineScreenState extends State<DailyRoutineScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      const Text(
-                                        'NOW',
-                                        style: TextStyle(
+                                      Text(
+                                        _getEventStatusLabel(event),
+                                        style: const TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w900,
                                           color: Colors.white,

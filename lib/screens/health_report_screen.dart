@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:animate_do/animate_do.dart';
 import '../models/health_report.dart';
 import '../core/theme/app_colors.dart';
@@ -14,260 +15,9 @@ class HealthReportScreen extends StatefulWidget {
 class _HealthReportScreenState extends State<HealthReportScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
-  late HealthReport report;
+  HealthReport? report;
   final Map<int, bool> _expandedStates = {};
-
-  // Hard-coded JSON data
-  static const String reportJson = '''
-{
-  "reportId": "asmnt_initial_001",
-  "userId": "narender_001",
-  "reportTitle": "Your 30-Day Recovery Blueprint",
-  "generatedAt": "2025-10-26T12:00:00Z",
-  "persona": "The Direct Coach",
-  "keyMetrics": [
-    {
-      "metricId": "m_triglycerides",
-      "label": "Triglycerides",
-      "value": 240.4,
-      "unit": "mg/dL",
-      "normalRange": "< 150",
-      "status": "VERY_HIGH_RISK"
-    },
-    {
-      "metricId": "m_ldl",
-      "label": "LDL Cholesterol",
-      "value": 194.12,
-      "unit": "mg/dL",
-      "normalRange": "< 100",
-      "status": "VERY_HIGH_RISK"
-    },
-    {
-      "metricId": "m_ggt",
-      "label": "GGT (Liver Stress)",
-      "value": 185.6,
-      "unit": "U/L",
-      "normalRange": "< 55",
-      "status": "SEVERE"
-    },
-    {
-      "metricId": "m_waist",
-      "label": "Waist Size",
-      "value": 41,
-      "unit": "inches",
-      "normalRange": "< 40",
-      "status": "HIGH_RISK"
-    },
-    {
-      "metricId": "m_total_chol",
-      "label": "Total Cholesterol",
-      "value": 300.9,
-      "unit": "mg/dL",
-      "normalRange": "< 200",
-      "status": "VERY_HIGH_RISK"
-    },
-    {
-      "metricId": "m_vit_d",
-      "label": "Vitamin D",
-      "value": 10.7,
-      "unit": "ng/mL",
-      "normalRange": "30-100",
-      "status": "DEFICIENT"
-    },
-    {
-      "metricId": "m_vit_b12",
-      "label": "Vitamin B12",
-      "value": 106,
-      "unit": "pg/mL",
-      "normalRange": "200-900",
-      "status": "DEFICIENT"
-    }
-  ],
-  "atAGlanceSummary": {
-    "title": "Your Situation: Serious, But 100% Reversible",
-    "negatives": [
-      {
-        "title": "High Immediate Risk",
-        "description": "Your risk for a heart attack or stroke is high, right now. This isn't a problem for 'later.' Your smoking, 41-inch waist, and severe lipid numbers are a dangerous combination."
-      }
-    ],
-    "positives": [
-      {
-        "title": "Proven Resilience",
-        "description": "Your body is strong. Your blood sugar and kidney function are perfect. You have proven you can recover."
-      },
-      {
-        "title": "Fast Liver Healing",
-        "description": "Your 2023-2024 labs show that when you make changes, your liver heals fast (your GGT dropped from 289 to 146!)."
-      }
-    ]
-  },
-  "riskAnalysis": {
-    "title": "Your Clinical Assessment: Connecting the Dots",
-    "summary": "Your lab report tells a clear story. These three factors are driving your severe heart attack risk.",
-    "riskFactors": [
-      {
-        "factorId": "rf_visceral_fat",
-        "title": "High Visceral Fat (Belly Fat)",
-        "metric": {
-          "label": "Waist Size",
-          "value": 41,
-          "unit": "inches"
-        },
-        "summary": "This isn't just 'weight.' It's visceral fat packed around your organs. This fat is an active, 'angry' organ itself, pumping out inflammatory signals.",
-        "causes": [
-          "Late-night, large carb meals",
-          "High-fat processed foods"
-        ],
-        "effects": [
-          "Poisons your liver",
-          "Damages blood vessels",
-          "Increases inflammation"
-        ]
-      },
-      {
-        "factorId": "rf_blood_fat",
-        "title": "High Blood Fat (Triglycerides)",
-        "metric": {
-          "label": "Triglycerides",
-          "value": 240.4,
-          "unit": "mg/dL",
-          "normalRange": "< 150"
-        },
-        "summary": "This is pure, unburned fuel (fat) circulating in your blood. Your body has no chance to burn it, so it stores it as visceral fat and clogs your arteries.",
-        "causes": [
-          "Ordering high-fat foods (biryani, fried chicken)",
-          "Large, late-night carb meals (e.g., 10 PM plate of dal rice)"
-        ],
-        "effects": [
-          "Directly stores as visceral fat",
-          "Clogs arteries",
-          "Contributes to heart attack risk"
-        ]
-      },
-      {
-        "factorId": "rf_liver_stress",
-        "title": "Severe Liver Stress",
-        "metric": {
-          "label": "GGT",
-          "value": 185.6,
-          "unit": "U/L",
-          "normalRange": "< 55"
-        },
-        "summary": "This is your liver's alarm bell, ringing at over 3.5 times the normal level. It's a direct sign of toxicity.",
-        "causes": [
-          "Visceral fat creating a 'fatty liver'",
-          "Weekend alcohol use on an already-stressed liver"
-        ],
-        "effects": [
-          "Indicates liver damage",
-          "Drives overall inflammation",
-          "Reduces body's ability to detoxify"
-        ]
-      }
-    ]
-  },
-  "actionPlan": {
-    "title": "Our 30-Day 'Bootcamp' Strategy",
-    "summary": "We will attack your risks on four fronts simultaneously. This is a 30-day plan to break old habits and build new ones. It is a prescription.",
-    "focusAreas": [
-      {
-        "areaId": "plan_diet",
-        "title": "Diet",
-        "goal": "Fix meal content and timing to stop fueling fat storage.",
-        "rules": [
-          "No outside food for 30 days.",
-          "Implement a structured meal plan (high protein/fiber).",
-          "No more skipped breakfast.",
-          "No more large, late-night dinners."
-        ],
-        "status": "HIGH_PRIORITY"
-      },
-      {
-        "areaId": "plan_exercise",
-        "title": "Exercise",
-        "goal": "Build a 24/7 fat-burning engine.",
-        "rules": [
-          "Add structure to your cardio for stamina (beyond just walking).",
-          "Introduce strength training to build muscle.",
-          "Follow the personalized workout plan."
-        ],
-        "status": "HIGH_PRIORITY"
-      },
-      {
-        "areaId": "plan_alcohol",
-        "title": "Alcohol",
-        "goal": "Allow your liver to heal.",
-        "rules": [
-          "Zero alcohol for these 30 days.",
-          "No whiskey, no beer."
-        ],
-        "reason": "Your GGT of 185 is a medical warning. Your liver must heal.",
-        "status": "NON_NEGOTIABLE"
-      },
-      {
-        "areaId": "plan_smoking",
-        "title": "Smoking",
-        "goal": "Allow your heart and lungs to heal.",
-        "rules": [
-          "Implement a clear cessation strategy.",
-          "Follow the 'Habit Swap' plan."
-        ],
-        "status": "NON_NEGOTIABLE"
-      }
-    ]
-  },
-  "supplementPrescription": {
-    "title": "Immediate Supplementation",
-    "summary": "Your new labs show severe deficiencies. Start these today.",
-    "prescriptions": [
-      {
-        "supplementId": "sup_vit_d3",
-        "title": "Vitamin D3 (60,000 IU)",
-        "reason": "Severe Deficiency",
-        "metric": {
-          "label": "Vitamin D",
-          "value": 10.7,
-          "unit": "ng/mL"
-        },
-        "dosage": "One sachet, once per week (e.g., every Sunday).",
-        "instructions": "Take with milk for 8 weeks."
-      },
-      {
-        "supplementId": "sup_vit_b12",
-        "title": "Vitamin B12 (1500 mcg)",
-        "reason": "Severe Deficiency",
-        "metric": {
-          "label": "Vitamin B12",
-          "value": 106,
-          "unit": "pg/mL"
-        },
-        "dosage": "One tablet, every day.",
-        "instructions": "Take for 30 days. This deficiency can cause fatigue."
-      },
-      {
-        "supplementId": "sup_omega3",
-        "title": "Omega-3 Fish Oil",
-        "reason": "High Triglycerides",
-        "metric": {
-          "label": "Triglycerides",
-          "value": 240.4,
-          "unit": "mg/dL"
-        },
-        "dosage": "At least 1000mg of (EPA + DHA) combined, daily.",
-        "instructions": "Take with lunch."
-      }
-    ]
-  },
-  "motivationalSummary": {
-    "title": "Your Path Forward",
-    "primaryMessage": "Narender, these numbers are not a life sentence. They are a warning. Your body is screaming for a change.",
-    "proofOfSuccess": "You have already proven you can do this. Your GGT dropped from 289 to 146 between 2023 and 2024. That is a phenomenal recovery. You just didn't have the full plan to make it stick. Now you do.",
-    "nextSteps": "This 30-day plan is your new blueprint. It's aggressive because your risk is aggressive. It will feel hard for the first week, but by Week 4, you will feel different.",
-    "closingThought": "You have a strong heart and healthy metabolism waiting to be unburied. Let's get to work."
-  }
-}
-''';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -277,9 +27,24 @@ class _HealthReportScreenState extends State<HealthReportScreen>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Parse JSON
-    final jsonData = jsonDecode(reportJson);
-    report = HealthReport.fromJson(jsonData);
+    _loadHealthReport();
+  }
+
+  Future<void> _loadHealthReport() async {
+    try {
+      // Load JSON from assets
+      final String jsonString = await rootBundle.loadString('bdata/HealthReport.json');
+      final jsonData = jsonDecode(jsonString);
+      setState(() {
+        report = HealthReport.fromJson(jsonData);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading health report: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -291,6 +56,50 @@ class _HealthReportScreenState extends State<HealthReportScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Show loading indicator while data is being loaded
+    if (_isLoading || report == null) {
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0A0E1A) : const Color(0xFFF5F7FA),
+        appBar: AppBar(
+          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.primaryLight,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'AI Insights',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                ),
+              ),
+              Text(
+                'Loading...',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryLight,
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primaryLight,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0E1A) : const Color(0xFFF5F7FA),
@@ -373,12 +182,12 @@ class _HealthReportScreenState extends State<HealthReportScreen>
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
           ),
-          itemCount: report.keyMetrics.length,
+          itemCount: report!.keyMetrics.length,
           itemBuilder: (context, index) {
             return FadeInUp(
               delay: Duration(milliseconds: 100 * index),
               duration: const Duration(milliseconds: 500),
-              child: _buildMetricCard(report.keyMetrics[index], isDark),
+              child: _buildMetricCard(report!.keyMetrics[index], isDark),
             );
           },
         ),
@@ -551,7 +360,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          report.atAGlanceSummary.title,
+          report!.atAGlanceSummary.title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -560,7 +369,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ...report.atAGlanceSummary.negatives.map((item) {
+        ...report!.atAGlanceSummary.negatives.map((item) {
           return FadeInLeft(
             duration: const Duration(milliseconds: 600),
             child: Container(
@@ -616,7 +425,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
           );
         }),
         const SizedBox(height: 8),
-        ...report.atAGlanceSummary.positives.map((item) {
+        ...report!.atAGlanceSummary.positives.map((item) {
           return FadeInRight(
             duration: const Duration(milliseconds: 600),
             child: Container(
@@ -681,7 +490,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          report.riskAnalysis.title,
+          report!.riskAnalysis.title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -691,7 +500,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          report.riskAnalysis.summary,
+          report!.riskAnalysis.summary,
           style: TextStyle(
             fontSize: 14,
             color: isDark ? Colors.white70 : Colors.black87,
@@ -699,7 +508,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ...report.riskAnalysis.riskFactors.asMap().entries.map((entry) {
+        ...report!.riskAnalysis.riskFactors.asMap().entries.map((entry) {
           final index = entry.key;
           final factor = entry.value;
           final isExpanded = _expandedStates[index] ?? false;
@@ -975,7 +784,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          report.actionPlan.title,
+          report!.actionPlan.title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -985,7 +794,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          report.actionPlan.summary,
+          report!.actionPlan.summary,
           style: TextStyle(
             fontSize: 14,
             color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF475569),
@@ -993,7 +802,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ...report.actionPlan.focusAreas.map((area) {
+        ...report!.actionPlan.focusAreas.map((area) {
           final isNonNegotiable = area.status == 'NON_NEGOTIABLE';
           final areaColor = isNonNegotiable ? const Color(0xFFDC2626) : const Color(0xFF059669);
 
@@ -1147,7 +956,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          report.supplementPrescription.title,
+          report!.supplementPrescription.title,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -1157,7 +966,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          report.supplementPrescription.summary,
+          report!.supplementPrescription.summary,
           style: TextStyle(
             fontSize: 14,
             color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF475569),
@@ -1165,7 +974,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
           ),
         ),
         const SizedBox(height: 16),
-        ...report.supplementPrescription.prescriptions.map((prescription) {
+        ...report!.supplementPrescription.prescriptions.map((prescription) {
           return FadeInUp(
             duration: const Duration(milliseconds: 600),
             child: Container(
@@ -1358,7 +1167,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    report.motivationalSummary.title,
+                    report!.motivationalSummary.title,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -1370,7 +1179,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              report.motivationalSummary.primaryMessage,
+              report!.motivationalSummary.primaryMessage,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -1392,7 +1201,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
                 ),
               ),
               child: Text(
-                report.motivationalSummary.proofOfSuccess,
+                report!.motivationalSummary.proofOfSuccess,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF475569),
@@ -1402,7 +1211,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              report.motivationalSummary.nextSteps,
+              report!.motivationalSummary.nextSteps,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF475569),
@@ -1411,7 +1220,7 @@ class _HealthReportScreenState extends State<HealthReportScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              report.motivationalSummary.closingThought,
+              report!.motivationalSummary.closingThought,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,

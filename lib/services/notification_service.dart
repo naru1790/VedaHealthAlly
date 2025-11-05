@@ -96,6 +96,10 @@ class NotificationService {
             enableVibration: true,
             fullScreenIntent: isAlarm,
             category: isAlarm ? AndroidNotificationCategory.alarm : null,
+            autoCancel: false,
+            ongoing: false,
+            visibility: NotificationVisibility.public,
+            ticker: title,
           ),
           iOS: DarwinNotificationDetails(
             sound: isAlarm ? 'morning_alarm.aiff' : null,
@@ -107,7 +111,7 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+        matchDateTimeComponents: DateTimeComponents.time, // This makes it repeat daily
       );
       
       print('Successfully scheduled ${isAlarm ? "ALARM" : "notification"} ID:$id');
@@ -154,9 +158,68 @@ class NotificationService {
 
   Future<void> cancelAll() async {
     await _notifications.cancelAll();
+    print('All notifications cancelled');
   }
 
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
+    print('Notification $id cancelled');
+  }
+
+  // Test notification for immediate feedback
+  Future<void> showTestNotification() async {
+    try {
+      await _notifications.show(
+        99999,
+        '🔔 Test Notification',
+        'If you see this, notifications are working correctly!',
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'test_channel',
+            'Test Notifications',
+            channelDescription: 'Test notifications to verify setup',
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+            enableVibration: true,
+            ticker: 'Test',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+      );
+      print('Test notification shown successfully');
+    } catch (e) {
+      print('Error showing test notification: $e');
+      rethrow;
+    }
+  }
+
+  // Check if notifications are enabled
+  Future<bool> areNotificationsEnabled() async {
+    try {
+      final androidImpl = _notifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      
+      if (androidImpl != null) {
+        final bool? enabled = await androidImpl.areNotificationsEnabled();
+        print('Notifications enabled status: $enabled');
+        return enabled ?? false;
+      }
+      
+      return true; // Assume enabled on other platforms
+    } catch (e) {
+      print('Error checking notification status: $e');
+      return false;
+    }
+  }
+
+  // Get list of pending notifications
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    return await _notifications.pendingNotificationRequests();
   }
 }
